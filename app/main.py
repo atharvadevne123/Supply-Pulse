@@ -16,6 +16,8 @@ from sqlalchemy.orm import Session
 
 from app import __version__
 from app.database import get_db, init_db
+from app.demand_forecast import compute_demand_statistics, forecast_demand
+from app.faiss_store import build_index, find_similar_suppliers
 from app.model import MODEL_VERSION, compute_reorder_point, load_model, predict
 from app.monitoring import (
     compute_prediction_stats,
@@ -200,3 +202,36 @@ def drift_scan(
 def monitoring_stats(db: Session = Depends(get_db)) -> dict[str, Any]:
     """Return aggregated inference statistics from the prediction log."""
     return compute_prediction_stats(db)
+
+
+class DemandForecastInput(BaseModel):
+    history: list[float] = Field(..., min_length=1, description="Historical demand values (oldest first)")
+    horizon: int = Field(default=6, ge=1, le=24, description="Forecast horizon in periods")
+    period: int = Field(default=12, ge=1, le=52, description="Seasonal period length")
+
+
+class SimilarSupplierInput(BaseModel):
+    supplier: dict[str, Any] = Field(..., description="Supplier attributes for similarity search")
+    top_k: int = Field(default=5, ge=1, le=20, description="Number of similar suppliers to return")
+
+
+@app.post("/api/v1/demand/forecast", tags=["demand"])
+def demand_forecast(payload: DemandForecastInput) -> dict[str, Any]:
+    """Forecast demand over a future horizon using trend + seasonality decomposition.
+
+    Returns point forecast and 95% confidence intervals for each period.
+    """
+    result = forecast_demand(payload.history, payload.horizon, payload.period)
+    result["stats"] = compute_demand_statistics(payload.history)
+    return result
+
+
+@app.post("/api/v1/suppliers/similar", tags=["suppliers"])
+def similar_suppliers(payload: SimilarSupplierInput) -> dict[str, Any]:
+    """Find the most similar suppliers using FAISS cosine similarity.
+
+    Requires the FAISS index to be pre-built via build_index().
+    Falls back to brute-force cosine similarity when faiss-cpu is unavailable.
+    """
+    results = find_similar_suppliers(payload.supplier, payload.top_k)
+    return {"similar_suppliers": results, "count": len(results)}
