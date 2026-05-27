@@ -78,7 +78,7 @@ def forecast_demand(
 
     return {
         "forecast": [round(f, 2) for f in forecasts],
-        "lower_bound": [round(l, 2) for l in lower],
+        "lower_bound": [round(lb, 2) for lb in lower],
         "upper_bound": [round(u, 2) for u in upper],
         "trend_slope": round(slope, 4),
         "std_residual": round(std_residual, 4),
