@@ -1,0 +1,36 @@
+version: "3.9"
+
+services:
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://supply_user:supply_pass@db:5432/supply_pulse
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+    volumes:
+      - model_artifacts:/app/model_artifacts
+
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: supply_user
+      POSTGRES_PASSWORD: supply_pass
+      POSTGRES_DB: supply_pulse
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U supply_user -d supply_pulse"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  model_artifacts:
