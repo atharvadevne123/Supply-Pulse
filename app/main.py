@@ -18,6 +18,7 @@ from app import __version__
 from app.database import get_db, init_db
 from app.demand_forecast import compute_demand_statistics, forecast_demand
 from app.faiss_store import build_index, find_similar_suppliers
+from app.supplier_scorer import compute_scorecard
 from app.model import MODEL_VERSION, compute_reorder_point, load_model, predict
 from app.monitoring import (
     compute_prediction_stats,
@@ -235,3 +236,13 @@ def similar_suppliers(payload: SimilarSupplierInput) -> dict[str, Any]:
     """
     results = find_similar_suppliers(payload.supplier, payload.top_k)
     return {"similar_suppliers": results, "count": len(results)}
+
+
+@app.post("/api/v1/suppliers/scorecard", tags=["suppliers"])
+def supplier_scorecard(payload: SupplierInput) -> dict[str, Any]:
+    """Compute a multi-dimensional supplier scorecard with weighted component scores.
+
+    Returns component scores (delivery, quality, financial, geopolitical, capacity),
+    a weighted total score (0-1), and a letter grade (A through F).
+    """
+    return compute_scorecard(payload.model_dump())
