@@ -19,18 +19,20 @@ from app.features import (
 
 
 def _base_df(n: int = 5) -> pd.DataFrame:
-    return pd.DataFrame({
-        "lead_time_days": [30] * n,
-        "on_time_rate": [0.9] * n,
-        "defect_rate": [0.02] * n,
-        "financial_score": [0.8] * n,
-        "geopolitical_risk": [0.3] * n,
-        "capacity_utilization": [0.6] * n,
-        "years_active": [10] * n,
-        "is_sole_source": [0] * n,
-        "country": ["US"] * n,
-        "category": ["electronics"] * n,
-    })
+    return pd.DataFrame(
+        {
+            "lead_time_days": [30] * n,
+            "on_time_rate": [0.9] * n,
+            "defect_rate": [0.02] * n,
+            "financial_score": [0.8] * n,
+            "geopolitical_risk": [0.3] * n,
+            "capacity_utilization": [0.6] * n,
+            "years_active": [10] * n,
+            "is_sole_source": [0] * n,
+            "country": ["US"] * n,
+            "category": ["electronics"] * n,
+        }
+    )
 
 
 class TestGeopoliticalRiskEncoder:
@@ -52,9 +54,16 @@ class TestGeopoliticalRiskEncoder:
         out = enc.fit_transform(df)
         assert out["country_risk_score"].iloc[0] == 0.2
 
-    @pytest.mark.parametrize("country,expected", [
-        ("RU", 0.9), ("KP", 0.9), ("MX", 0.5), ("DE", 0.2), ("GB", 0.2),
-    ])
+    @pytest.mark.parametrize(
+        "country,expected",
+        [
+            ("RU", 0.9),
+            ("KP", 0.9),
+            ("MX", 0.5),
+            ("DE", 0.2),
+            ("GB", 0.2),
+        ],
+    )
     def test_country_risk_scores(self, country, expected):
         df = pd.DataFrame({"country": [country]})
         enc = GeopoliticalRiskEncoder()
@@ -63,12 +72,15 @@ class TestGeopoliticalRiskEncoder:
 
 
 class TestCategoryRiskEncoder:
-    @pytest.mark.parametrize("category,expected", [
-        ("semiconductor", 0.85),
-        ("rare_earth", 0.90),
-        ("textile", 0.40),
-        ("logistics", 0.45),
-    ])
+    @pytest.mark.parametrize(
+        "category,expected",
+        [
+            ("semiconductor", 0.85),
+            ("rare_earth", 0.90),
+            ("textile", 0.40),
+            ("logistics", 0.45),
+        ],
+    )
     def test_category_scores(self, category, expected):
         df = pd.DataFrame({"category": [category]})
         enc = CategoryRiskEncoder()
@@ -91,14 +103,24 @@ class TestCompositeRiskTransformer:
         assert (df["composite_risk"].between(0, 1)).all()
 
     def test_high_risk_inputs_give_higher_composite(self):
-        low_df = pd.DataFrame({
-            "geopolitical_risk": [0.1], "country_risk_score": [0.2],
-            "category_risk_score": [0.4], "financial_score": [0.95], "defect_rate": [0.01],
-        })
-        high_df = pd.DataFrame({
-            "geopolitical_risk": [0.9], "country_risk_score": [0.9],
-            "category_risk_score": [0.9], "financial_score": [0.3], "defect_rate": [0.15],
-        })
+        low_df = pd.DataFrame(
+            {
+                "geopolitical_risk": [0.1],
+                "country_risk_score": [0.2],
+                "category_risk_score": [0.4],
+                "financial_score": [0.95],
+                "defect_rate": [0.01],
+            }
+        )
+        high_df = pd.DataFrame(
+            {
+                "geopolitical_risk": [0.9],
+                "country_risk_score": [0.9],
+                "category_risk_score": [0.9],
+                "financial_score": [0.3],
+                "defect_rate": [0.15],
+            }
+        )
         t = CompositeRiskTransformer()
         low_risk = t.fit_transform(low_df)["composite_risk"].iloc[0]
         high_risk = t.fit_transform(high_df)["composite_risk"].iloc[0]
@@ -169,11 +191,14 @@ class TestComputeDemandFeatures:
         result = compute_demand_features(increasing)
         assert result["trend"] > 0
 
-    @pytest.mark.parametrize("demands,expected_max", [
-        ([10, 20, 30], 30),
-        ([5, 5, 5], 5),
-        ([1, 100, 50], 100),
-    ])
+    @pytest.mark.parametrize(
+        "demands,expected_max",
+        [
+            ([10, 20, 30], 30),
+            ([5, 5, 5], 5),
+            ([1, 100, 50], 100),
+        ],
+    )
     def test_max_demand(self, demands, expected_max):
         result = compute_demand_features(demands)
         assert result["max"] == float(expected_max)

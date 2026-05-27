@@ -26,9 +26,13 @@ NUMERIC_FEATURES = [
 
 CATEGORICAL_FEATURES = ["country", "category"]
 
-ALL_FEATURES = NUMERIC_FEATURES + ["country_risk_score", "category_risk_score",
-                                    "composite_risk", "reliability_index",
-                                    "supply_concentration"]
+ALL_FEATURES = NUMERIC_FEATURES + [
+    "country_risk_score",
+    "category_risk_score",
+    "composite_risk",
+    "reliability_index",
+    "supply_concentration",
+]
 
 
 class GeopoliticalRiskEncoder(BaseEstimator, TransformerMixin):
@@ -74,9 +78,7 @@ class CategoryRiskEncoder(BaseEstimator, TransformerMixin):
     def transform(self, X: pd.DataFrame) -> pd.DataFrame:
         X = X.copy()
         cat_col = X.get("category", pd.Series(["logistics"] * len(X)))
-        X["category_risk_score"] = cat_col.apply(
-            lambda c: self.RISK_MAP.get(str(c).lower(), 0.50)
-        )
+        X["category_risk_score"] = cat_col.apply(lambda c: self.RISK_MAP.get(str(c).lower(), 0.50))
         return X
 
 

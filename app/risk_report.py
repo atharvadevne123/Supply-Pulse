@@ -105,6 +105,9 @@ def build_risk_report(
     }
     logger.info(
         "Risk report for '%s': severity=%s, risk=%.4f, grade=%s",
-        supplier_name, severity, disruption_risk, scorecard.get("grade", "N/A"),
+        supplier_name,
+        severity,
+        disruption_risk,
+        scorecard.get("grade", "N/A"),
     )
     return report

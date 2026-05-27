@@ -15,23 +15,36 @@ from app.supplier_scorer import (
 )
 
 GOOD_SUPPLIER = {
-    "on_time_rate": 0.98, "lead_time_days": 10, "defect_rate": 0.005,
-    "years_active": 20, "financial_score": 0.95, "geopolitical_risk": 0.10,
-    "is_sole_source": 0, "capacity_utilization": 0.40,
+    "on_time_rate": 0.98,
+    "lead_time_days": 10,
+    "defect_rate": 0.005,
+    "years_active": 20,
+    "financial_score": 0.95,
+    "geopolitical_risk": 0.10,
+    "is_sole_source": 0,
+    "capacity_utilization": 0.40,
 }
 
 BAD_SUPPLIER = {
-    "on_time_rate": 0.55, "lead_time_days": 100, "defect_rate": 0.14,
-    "years_active": 1, "financial_score": 0.30, "geopolitical_risk": 0.90,
-    "is_sole_source": 1, "capacity_utilization": 0.98,
+    "on_time_rate": 0.55,
+    "lead_time_days": 100,
+    "defect_rate": 0.14,
+    "years_active": 1,
+    "financial_score": 0.30,
+    "geopolitical_risk": 0.90,
+    "is_sole_source": 1,
+    "capacity_utilization": 0.98,
 }
 
 
 class TestDeliveryScore:
-    @pytest.mark.parametrize("on_time,lead_time,expected_min", [
-        (0.99, 7, 0.7),
-        (0.55, 90, 0.0),
-    ])
+    @pytest.mark.parametrize(
+        "on_time,lead_time,expected_min",
+        [
+            (0.99, 7, 0.7),
+            (0.55, 90, 0.0),
+        ],
+    )
     def test_delivery_score_range(self, on_time, lead_time, expected_min):
         score = score_delivery(on_time, lead_time)
         assert score >= expected_min
@@ -82,10 +95,13 @@ class TestGeopoliticalScore:
 
 
 class TestCapacityScore:
-    @pytest.mark.parametrize("util,expected_max", [
-        (0.0, 1.0),
-        (1.0, 0.0),
-    ])
+    @pytest.mark.parametrize(
+        "util,expected_max",
+        [
+            (0.0, 1.0),
+            (1.0, 0.0),
+        ],
+    )
     def test_capacity_extremes(self, util, expected_max):
         score = score_capacity(util)
         assert abs(score - expected_max) < 0.01
@@ -116,8 +132,15 @@ class TestComputeScorecard:
 
 
 class TestGrade:
-    @pytest.mark.parametrize("score,expected", [
-        (0.90, "A"), (0.75, "B"), (0.60, "C"), (0.45, "D"), (0.30, "F"),
-    ])
+    @pytest.mark.parametrize(
+        "score,expected",
+        [
+            (0.90, "A"),
+            (0.75, "B"),
+            (0.60, "C"),
+            (0.45, "D"),
+            (0.30, "F"),
+        ],
+    )
     def test_grade_boundaries(self, score, expected):
         assert _grade(score) == expected

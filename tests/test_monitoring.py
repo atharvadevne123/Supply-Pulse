@@ -6,7 +6,6 @@ import numpy as np
 import pytest
 
 from app.monitoring import (
-    DRIFT_MIN_SAMPLE_SIZE,
     compute_prediction_stats,
     detect_drift,
     run_full_drift_scan,
@@ -19,6 +18,7 @@ class TestSetReferenceDistribution:
         values = np.random.default_rng(0).uniform(0, 1, 100)
         set_reference_distribution("test_feature_set", values)
         from app.monitoring import _reference_distributions
+
         assert "test_feature_set" in _reference_distributions
 
     def test_set_reference_overwrites_existing(self):
@@ -27,6 +27,7 @@ class TestSetReferenceDistribution:
         set_reference_distribution("overwrite_feature", values1)
         set_reference_distribution("overwrite_feature", values2)
         from app.monitoring import _reference_distributions
+
         assert np.allclose(_reference_distributions["overwrite_feature"], values2)
 
 
@@ -68,10 +69,13 @@ class TestDetectDrift:
         result = detect_drift("geo_risk_test", current)
         assert result["sample_size"] == 150
 
-    @pytest.mark.parametrize("current_mean,should_drift", [
-        (0.5, False),
-        (0.0, True),
-    ])
+    @pytest.mark.parametrize(
+        "current_mean,should_drift",
+        [
+            (0.5, False),
+            (0.0, True),
+        ],
+    )
     def test_drift_by_distribution_shift(self, current_mean, should_drift):
         rng = np.random.default_rng(10)
         set_reference_distribution("param_test_feat", rng.uniform(0.3, 0.7, 300))

@@ -17,7 +17,14 @@ logger = logging.getLogger(__name__)
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./supply_pulse.db")
 
 COUNTRIES = ["US", "CN", "DE", "IN", "MX", "JP", "GB", "KR", "VN", "BR"]
-CATEGORIES = ["electronics", "semiconductor", "textile", "logistics", "pharmaceutical", "automotive"]
+CATEGORIES = [
+    "electronics",
+    "semiconductor",
+    "textile",
+    "logistics",
+    "pharmaceutical",
+    "automotive",
+]
 
 
 def seed_suppliers(session, n: int = 50) -> list[int]:
@@ -26,7 +33,7 @@ def seed_suppliers(session, n: int = 50) -> list[int]:
     supplier_ids = []
     for i in range(n):
         s = Supplier(
-            name=f"Supplier-{i+1:04d}",
+            name=f"Supplier-{i + 1:04d}",
             country=rng.choice(COUNTRIES),
             category=rng.choice(CATEGORIES),
             lead_time_days=rng.randint(7, 120),
@@ -52,8 +59,8 @@ def seed_products(session, supplier_ids: list[int], n: int = 100) -> None:
     for i in range(n):
         sup = rng.choice(all_suppliers)
         p = Product(
-            sku=f"SKU-{i+1:06d}",
-            name=f"Product {i+1}",
+            sku=f"SKU-{i + 1:06d}",
+            name=f"Product {i + 1}",
             supplier_id=sup.id,
             unit_cost=round(rng.uniform(5.0, 500.0), 2),
             holding_cost_pct=round(rng.uniform(0.10, 0.30), 3),
@@ -89,7 +96,10 @@ def seed_demand(session, n_periods: int = 24) -> None:
 
 
 def main() -> None:
-    engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {})
+    engine = create_engine(
+        DATABASE_URL,
+        connect_args={"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {},
+    )
     Base.metadata.create_all(bind=engine)
     Session = sessionmaker(bind=engine)
     with Session() as session:

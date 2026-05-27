@@ -2,10 +2,7 @@
 
 from __future__ import annotations
 
-import pytest
-
 from pipelines.retrain_dag import (
-    fetch_training_data,
     publish_model,
     retrain_model,
     run_drift_check,

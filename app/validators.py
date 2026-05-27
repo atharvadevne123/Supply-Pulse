@@ -8,14 +8,42 @@ from typing import Any
 logger = logging.getLogger(__name__)
 
 VALID_COUNTRIES = {
-    "US", "CN", "DE", "IN", "MX", "JP", "GB", "KR", "VN", "BR",
-    "FR", "IT", "ES", "CA", "AU", "RU", "TR", "IR", "KP", "MM",
-    "BY", "PK", "BD", "EG", "NG",
+    "US",
+    "CN",
+    "DE",
+    "IN",
+    "MX",
+    "JP",
+    "GB",
+    "KR",
+    "VN",
+    "BR",
+    "FR",
+    "IT",
+    "ES",
+    "CA",
+    "AU",
+    "RU",
+    "TR",
+    "IR",
+    "KP",
+    "MM",
+    "BY",
+    "PK",
+    "BD",
+    "EG",
+    "NG",
 }
 
 VALID_CATEGORIES = {
-    "electronics", "semiconductor", "rare_earth", "pharmaceutical",
-    "automotive", "textile", "food", "logistics",
+    "electronics",
+    "semiconductor",
+    "rare_earth",
+    "pharmaceutical",
+    "automotive",
+    "textile",
+    "food",
+    "logistics",
 }
 
 
@@ -80,7 +108,9 @@ def sanitize_supplier_fields(data: dict[str, Any]) -> dict[str, Any]:
     safe["defect_rate"] = float(max(0.0, min(1.0, safe.get("defect_rate") or 0.02)))
     safe["financial_score"] = float(max(0.0, min(1.0, safe.get("financial_score") or 0.8)))
     safe["geopolitical_risk"] = float(max(0.0, min(1.0, safe.get("geopolitical_risk") or 0.3)))
-    safe["capacity_utilization"] = float(max(0.0, min(1.0, safe.get("capacity_utilization") or 0.6)))
+    safe["capacity_utilization"] = float(
+        max(0.0, min(1.0, safe.get("capacity_utilization") or 0.6))
+    )
     safe["lead_time_days"] = max(1, int(safe.get("lead_time_days") or 30))
     safe["years_active"] = max(0, int(safe.get("years_active") or 5))
     safe["is_sole_source"] = int(bool(safe.get("is_sole_source", 0)))

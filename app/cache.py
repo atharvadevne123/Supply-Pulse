@@ -21,6 +21,7 @@ def ttl_cache(ttl_seconds: int = 60) -> Callable:
     Returns:
         Decorated function with caching applied.
     """
+
     def decorator(func: Callable) -> Callable:
         @wraps(func)
         def wrapper(*args: Any, **kwargs: Any) -> Any:
@@ -36,7 +37,9 @@ def ttl_cache(ttl_seconds: int = 60) -> Callable:
             _cache[cache_key] = (result, now + ttl_seconds)
             logger.debug("Cache miss for '%s' - stored with TTL=%ds", func.__name__, ttl_seconds)
             return result
+
         return wrapper
+
     return decorator
 
 

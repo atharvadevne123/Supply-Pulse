@@ -8,16 +8,19 @@ from app.model import compute_reorder_point
 
 
 class TestReorderPointExtended:
-    @pytest.mark.parametrize("mean,std,lead,z", [
-        (50.0, 10.0, 7, 1.28),
-        (200.0, 50.0, 21, 1.645),
-        (500.0, 100.0, 30, 2.326),
-        (10.0, 2.0, 3, 1.645),
-    ])
+    @pytest.mark.parametrize(
+        "mean,std,lead,z",
+        [
+            (50.0, 10.0, 7, 1.28),
+            (200.0, 50.0, 21, 1.645),
+            (500.0, 100.0, 30, 2.326),
+            (10.0, 2.0, 3, 1.645),
+        ],
+    )
     def test_reorder_formula_components(self, mean, std, lead, z):
         result = compute_reorder_point(mean, std, lead, z)
         expected_lead_demand = mean * lead
-        expected_safety_stock = z * std * (lead ** 0.5)
+        expected_safety_stock = z * std * (lead**0.5)
         assert abs(result["lead_demand"] - round(expected_lead_demand, 2)) < 0.01
         assert abs(result["safety_stock"] - round(expected_safety_stock, 2)) < 0.01
 

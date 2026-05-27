@@ -8,7 +8,7 @@ import uuid
 from contextlib import asynccontextmanager
 from typing import Any
 
-from fastapi import Depends, FastAPI, HTTPException, Request, status
+from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
@@ -17,15 +17,14 @@ from sqlalchemy.orm import Session
 from app import __version__
 from app.database import get_db, init_db
 from app.demand_forecast import compute_demand_statistics, forecast_demand
-from app.faiss_store import build_index, find_similar_suppliers
-from app.supplier_scorer import compute_scorecard
+from app.faiss_store import find_similar_suppliers
 from app.model import MODEL_VERSION, compute_reorder_point, load_model, predict
 from app.monitoring import (
     compute_prediction_stats,
-    detect_drift,
     log_prediction,
     run_full_drift_scan,
 )
+from app.supplier_scorer import compute_scorecard
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
 logger = logging.getLogger(__name__)
@@ -85,7 +84,9 @@ class SupplierInput(BaseModel):
     defect_rate: float = Field(..., ge=0.0, le=1.0, description="Product defect rate")
     financial_score: float = Field(..., ge=0.0, le=1.0, description="Financial health score")
     geopolitical_risk: float = Field(..., ge=0.0, le=1.0, description="Geopolitical risk index")
-    capacity_utilization: float = Field(..., ge=0.0, le=1.0, description="Capacity utilization ratio")
+    capacity_utilization: float = Field(
+        ..., ge=0.0, le=1.0, description="Capacity utilization ratio"
+    )
     years_active: int = Field(..., ge=0, le=200, description="Years the supplier has been active")
     is_sole_source: int = Field(default=0, ge=0, le=1, description="1 if sole-source supplier")
     country: str = Field(default="US", max_length=50, description="ISO country code")
@@ -96,7 +97,9 @@ class ReorderInput(BaseModel):
     mean_daily_demand: float = Field(..., gt=0, description="Average daily demand")
     std_daily_demand: float = Field(..., ge=0, description="Std deviation of daily demand")
     lead_time_days: int = Field(..., ge=1, le=365, description="Supplier lead time")
-    service_level: float = Field(default=0.95, ge=0.50, le=0.999, description="Target service level")
+    service_level: float = Field(
+        default=0.95, ge=0.50, le=0.999, description="Target service level"
+    )
 
 
 class DriftInput(BaseModel):
@@ -187,7 +190,6 @@ def drift_scan(
 
     Uses the two-sample KS test. A p-value < 0.05 indicates drift.
     """
-    import numpy as np
 
     results = run_full_drift_scan(payload.features, db=db)
     drifted_features = [r["feature"] for r in results if r.get("drift_detected")]
@@ -206,7 +208,9 @@ def monitoring_stats(db: Session = Depends(get_db)) -> dict[str, Any]:
 
 
 class DemandForecastInput(BaseModel):
-    history: list[float] = Field(..., min_length=1, description="Historical demand values (oldest first)")
+    history: list[float] = Field(
+        ..., min_length=1, description="Historical demand values (oldest first)"
+    )
     horizon: int = Field(default=6, ge=1, le=24, description="Forecast horizon in periods")
     period: int = Field(default=12, ge=1, le=52, description="Seasonal period length")
 

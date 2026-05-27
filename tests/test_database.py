@@ -13,7 +13,6 @@ from app.database import (
     PredictionLog,
     Product,
     Supplier,
-    init_db,
 )
 
 TEST_URL = "sqlite:///./test_db_models.db"
@@ -39,10 +38,17 @@ def session(engine):
 class TestSupplierModel:
     def test_create_supplier(self, session):
         s = Supplier(
-            name="Test Corp", country="US", category="electronics",
-            lead_time_days=30, on_time_rate=0.95, defect_rate=0.01,
-            financial_score=0.9, geopolitical_risk=0.2,
-            capacity_utilization=0.6, years_active=10, is_sole_source=False,
+            name="Test Corp",
+            country="US",
+            category="electronics",
+            lead_time_days=30,
+            on_time_rate=0.95,
+            defect_rate=0.01,
+            financial_score=0.9,
+            geopolitical_risk=0.2,
+            capacity_utilization=0.6,
+            years_active=10,
+            is_sole_source=False,
         )
         session.add(s)
         session.flush()
@@ -50,10 +56,16 @@ class TestSupplierModel:
 
     def test_supplier_defaults(self, session):
         s = Supplier(
-            name="Minimal Corp", country="DE", category="textile",
-            lead_time_days=15, on_time_rate=0.9, defect_rate=0.02,
-            financial_score=0.8, geopolitical_risk=0.3,
-            capacity_utilization=0.5, years_active=5,
+            name="Minimal Corp",
+            country="DE",
+            category="textile",
+            lead_time_days=15,
+            on_time_rate=0.9,
+            defect_rate=0.02,
+            financial_score=0.8,
+            geopolitical_risk=0.3,
+            capacity_utilization=0.5,
+            years_active=5,
         )
         session.add(s)
         session.flush()
@@ -63,9 +75,14 @@ class TestSupplierModel:
 class TestProductModel:
     def test_create_product(self, session):
         p = Product(
-            sku="SKU-001", name="Widget A", supplier_id=1,
-            unit_cost=50.0, holding_cost_pct=0.20,
-            reorder_cost=100.0, safety_stock=50, lead_time_days=14,
+            sku="SKU-001",
+            name="Widget A",
+            supplier_id=1,
+            unit_cost=50.0,
+            holding_cost_pct=0.20,
+            reorder_cost=100.0,
+            safety_stock=50,
+            lead_time_days=14,
         )
         session.add(p)
         session.flush()

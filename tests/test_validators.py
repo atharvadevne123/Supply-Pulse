@@ -14,19 +14,26 @@ from app.validators import (
 class TestValidateSupplierInput:
     def test_valid_input_returns_no_errors(self):
         data = {
-            "on_time_rate": 0.9, "defect_rate": 0.02, "financial_score": 0.8,
-            "geopolitical_risk": 0.3, "capacity_utilization": 0.6,
-            "lead_time_days": 30, "years_active": 10,
+            "on_time_rate": 0.9,
+            "defect_rate": 0.02,
+            "financial_score": 0.8,
+            "geopolitical_risk": 0.3,
+            "capacity_utilization": 0.6,
+            "lead_time_days": 30,
+            "years_active": 10,
         }
         errors = validate_supplier_input(data)
         assert errors == []
 
-    @pytest.mark.parametrize("field,value", [
-        ("on_time_rate", 1.5),
-        ("defect_rate", -0.1),
-        ("financial_score", 2.0),
-        ("geopolitical_risk", -0.5),
-    ])
+    @pytest.mark.parametrize(
+        "field,value",
+        [
+            ("on_time_rate", 1.5),
+            ("defect_rate", -0.1),
+            ("financial_score", 2.0),
+            ("geopolitical_risk", -0.5),
+        ],
+    )
     def test_out_of_range_returns_error(self, field, value):
         data = {field: value}
         errors = validate_supplier_input(data)

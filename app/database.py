@@ -7,8 +7,6 @@ import os
 from datetime import datetime
 from typing import Generator
 
-logger = logging.getLogger(__name__)
-
 from sqlalchemy import (
     JSON,
     Boolean,
@@ -21,6 +19,8 @@ from sqlalchemy import (
     create_engine,
 )
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
+
+logger = logging.getLogger(__name__)
 
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./supply_pulse.db")
 

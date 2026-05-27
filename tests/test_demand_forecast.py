@@ -83,10 +83,13 @@ class TestComputeDemandStatistics:
         stats = compute_demand_statistics([80.0, 90.0, 100.0, 110.0, 120.0])
         assert stats["cv"] > 0
 
-    @pytest.mark.parametrize("values,expected_min,expected_max", [
-        ([10, 20, 30], 10.0, 30.0),
-        ([5], 5.0, 5.0),
-    ])
+    @pytest.mark.parametrize(
+        "values,expected_min,expected_max",
+        [
+            ([10, 20, 30], 10.0, 30.0),
+            ([5], 5.0, 5.0),
+        ],
+    )
     def test_min_max_values(self, values, expected_min, expected_max):
         stats = compute_demand_statistics(values)
         assert stats["min"] == expected_min

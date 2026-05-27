@@ -7,23 +7,25 @@ import pandas as pd
 import pytest
 
 from app.features import build_feature_pipeline
-from app.model import _train_default_model, predict, train
+from app.model import predict, train
 
 
 def _make_df(n: int = 50, seed: int = 0) -> tuple[pd.DataFrame, pd.Series]:
     rng = np.random.default_rng(seed)
-    df = pd.DataFrame({
-        "lead_time_days": rng.integers(5, 90, n),
-        "on_time_rate": rng.uniform(0.6, 1.0, n),
-        "defect_rate": rng.uniform(0.0, 0.12, n),
-        "financial_score": rng.uniform(0.4, 1.0, n),
-        "geopolitical_risk": rng.uniform(0.0, 1.0, n),
-        "capacity_utilization": rng.uniform(0.3, 0.9, n),
-        "years_active": rng.integers(1, 25, n),
-        "is_sole_source": rng.integers(0, 2, n),
-        "country": rng.choice(["US", "CN", "DE"], n),
-        "category": rng.choice(["electronics", "textile", "logistics"], n),
-    })
+    df = pd.DataFrame(
+        {
+            "lead_time_days": rng.integers(5, 90, n),
+            "on_time_rate": rng.uniform(0.6, 1.0, n),
+            "defect_rate": rng.uniform(0.0, 0.12, n),
+            "financial_score": rng.uniform(0.4, 1.0, n),
+            "geopolitical_risk": rng.uniform(0.0, 1.0, n),
+            "capacity_utilization": rng.uniform(0.3, 0.9, n),
+            "years_active": rng.integers(1, 25, n),
+            "is_sole_source": rng.integers(0, 2, n),
+            "country": rng.choice(["US", "CN", "DE"], n),
+            "category": rng.choice(["electronics", "textile", "logistics"], n),
+        }
+    )
     y = pd.Series(((df["geopolitical_risk"] > 0.6) | (df["defect_rate"] > 0.08)).astype(int))
     return df, y
 
@@ -47,10 +49,16 @@ class TestEndToEndPipeline:
 
     def test_predict_function_wrapper(self, pipeline):
         sample = {
-            "lead_time_days": 30, "on_time_rate": 0.9, "defect_rate": 0.02,
-            "financial_score": 0.8, "geopolitical_risk": 0.3,
-            "capacity_utilization": 0.6, "years_active": 5,
-            "is_sole_source": 0, "country": "US", "category": "electronics",
+            "lead_time_days": 30,
+            "on_time_rate": 0.9,
+            "defect_rate": 0.02,
+            "financial_score": 0.8,
+            "geopolitical_risk": 0.3,
+            "capacity_utilization": 0.6,
+            "years_active": 5,
+            "is_sole_source": 0,
+            "country": "US",
+            "category": "electronics",
         }
         result = predict(sample, pipeline)
         assert 0.0 <= result["disruption_risk"] <= 1.0
@@ -58,24 +66,51 @@ class TestEndToEndPipeline:
 
     def test_feature_pipeline_transforms_consistently(self):
         pipe = build_feature_pipeline()
-        df1 = pd.DataFrame([{
-            "lead_time_days": 30, "on_time_rate": 0.9, "defect_rate": 0.02,
-            "financial_score": 0.8, "geopolitical_risk": 0.3,
-            "capacity_utilization": 0.6, "years_active": 5,
-            "is_sole_source": 0, "country": "US", "category": "electronics",
-        }] * 3)
+        df1 = pd.DataFrame(
+            [
+                {
+                    "lead_time_days": 30,
+                    "on_time_rate": 0.9,
+                    "defect_rate": 0.02,
+                    "financial_score": 0.8,
+                    "geopolitical_risk": 0.3,
+                    "capacity_utilization": 0.6,
+                    "years_active": 5,
+                    "is_sole_source": 0,
+                    "country": "US",
+                    "category": "electronics",
+                }
+            ]
+            * 3
+        )
         out = pipe.fit_transform(df1)
         assert np.allclose(out[0], out[1]) and np.allclose(out[1], out[2])
 
     def test_high_and_low_risk_separated(self, pipeline):
-        low = {"lead_time_days": 7, "on_time_rate": 0.99, "defect_rate": 0.001,
-               "financial_score": 0.99, "geopolitical_risk": 0.05,
-               "capacity_utilization": 0.30, "years_active": 20,
-               "is_sole_source": 0, "country": "US", "category": "logistics"}
-        high = {"lead_time_days": 120, "on_time_rate": 0.50, "defect_rate": 0.14,
-                "financial_score": 0.30, "geopolitical_risk": 0.95,
-                "capacity_utilization": 0.98, "years_active": 1,
-                "is_sole_source": 1, "country": "CN", "category": "semiconductor"}
+        low = {
+            "lead_time_days": 7,
+            "on_time_rate": 0.99,
+            "defect_rate": 0.001,
+            "financial_score": 0.99,
+            "geopolitical_risk": 0.05,
+            "capacity_utilization": 0.30,
+            "years_active": 20,
+            "is_sole_source": 0,
+            "country": "US",
+            "category": "logistics",
+        }
+        high = {
+            "lead_time_days": 120,
+            "on_time_rate": 0.50,
+            "defect_rate": 0.14,
+            "financial_score": 0.30,
+            "geopolitical_risk": 0.95,
+            "capacity_utilization": 0.98,
+            "years_active": 1,
+            "is_sole_source": 1,
+            "country": "CN",
+            "category": "semiconductor",
+        }
         low_risk = predict(low, pipeline)
         high_risk = predict(high, pipeline)
         assert high_risk["disruption_risk"] > low_risk["disruption_risk"]

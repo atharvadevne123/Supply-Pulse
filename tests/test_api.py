@@ -119,11 +119,14 @@ class TestReorderPointEndpoint:
         assert resp.status_code == 200
         assert resp.json()["safety_stock"] == 0.0
 
-    @pytest.mark.parametrize("service_level,expected_z", [
-        (0.90, 1.28),
-        (0.95, 1.645),
-        (0.99, 2.326),
-    ])
+    @pytest.mark.parametrize(
+        "service_level,expected_z",
+        [
+            (0.90, 1.28),
+            (0.95, 1.645),
+            (0.99, 2.326),
+        ],
+    )
     def test_reorder_service_levels(self, client, reorder_payload, service_level, expected_z):
         payload = dict(reorder_payload)
         payload["service_level"] = service_level

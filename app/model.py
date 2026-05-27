@@ -42,22 +42,38 @@ def _build_estimators() -> list[tuple[str, Any]]:
     """Return list of (name, estimator) tuples for VotingClassifier."""
     estimators: list[tuple[str, Any]] = []
     rf = RandomForestClassifier(
-        n_estimators=200, max_depth=8, min_samples_leaf=5,
-        class_weight="balanced", random_state=42, n_jobs=-1,
+        n_estimators=200,
+        max_depth=8,
+        min_samples_leaf=5,
+        class_weight="balanced",
+        random_state=42,
+        n_jobs=-1,
     )
     estimators.append(("rf", rf))
     if XGB_AVAILABLE:
         xgb_clf = xgb.XGBClassifier(
-            n_estimators=300, max_depth=6, learning_rate=0.05,
-            subsample=0.8, colsample_bytree=0.8, scale_pos_weight=3,
-            eval_metric="auc", random_state=42, n_jobs=-1,
+            n_estimators=300,
+            max_depth=6,
+            learning_rate=0.05,
+            subsample=0.8,
+            colsample_bytree=0.8,
+            scale_pos_weight=3,
+            eval_metric="auc",
+            random_state=42,
+            n_jobs=-1,
         )
         estimators.append(("xgb", xgb_clf))
     if LGB_AVAILABLE:
         lgb_clf = lgb.LGBMClassifier(
-            n_estimators=300, max_depth=6, learning_rate=0.05,
-            subsample=0.8, colsample_bytree=0.8, class_weight="balanced",
-            random_state=42, n_jobs=-1, verbose=-1,
+            n_estimators=300,
+            max_depth=6,
+            learning_rate=0.05,
+            subsample=0.8,
+            colsample_bytree=0.8,
+            class_weight="balanced",
+            random_state=42,
+            n_jobs=-1,
+            verbose=-1,
         )
         estimators.append(("lgb", lgb_clf))
     return estimators
@@ -101,7 +117,9 @@ def train(
         "n_features": X_transformed.shape[1],
         "disruption_rate": float(y.mean()),
     }
-    logger.info("Training complete. CV AUC: %.4f ± %.4f", metrics["cv_auc_mean"], metrics["cv_auc_std"])
+    logger.info(
+        "Training complete. CV AUC: %.4f ± %.4f", metrics["cv_auc_mean"], metrics["cv_auc_std"]
+    )
     return full_pipeline, metrics
 
 
@@ -126,23 +144,27 @@ def _train_default_model() -> Pipeline:
     """Train a minimal model on synthetic data for cold-start scenarios."""
     rng = np.random.default_rng(42)
     n = 800
-    df = pd.DataFrame({
-        "lead_time_days": rng.integers(5, 120, n),
-        "on_time_rate": rng.uniform(0.5, 1.0, n),
-        "defect_rate": rng.uniform(0.0, 0.15, n),
-        "financial_score": rng.uniform(0.3, 1.0, n),
-        "geopolitical_risk": rng.uniform(0.0, 1.0, n),
-        "capacity_utilization": rng.uniform(0.3, 1.0, n),
-        "years_active": rng.integers(1, 30, n),
-        "is_sole_source": rng.integers(0, 2, n),
-        "country": rng.choice(["US", "CN", "DE", "IN", "MX"], n),
-        "category": rng.choice(["electronics", "textile", "logistics", "semiconductor"], n),
-    })
-    y = pd.Series((
-        (df["geopolitical_risk"] > 0.6).astype(int)
-        | (df["defect_rate"] > 0.10).astype(int)
-        | (df["on_time_rate"] < 0.70).astype(int)
-    ).clip(0, 1))
+    df = pd.DataFrame(
+        {
+            "lead_time_days": rng.integers(5, 120, n),
+            "on_time_rate": rng.uniform(0.5, 1.0, n),
+            "defect_rate": rng.uniform(0.0, 0.15, n),
+            "financial_score": rng.uniform(0.3, 1.0, n),
+            "geopolitical_risk": rng.uniform(0.0, 1.0, n),
+            "capacity_utilization": rng.uniform(0.3, 1.0, n),
+            "years_active": rng.integers(1, 30, n),
+            "is_sole_source": rng.integers(0, 2, n),
+            "country": rng.choice(["US", "CN", "DE", "IN", "MX"], n),
+            "category": rng.choice(["electronics", "textile", "logistics", "semiconductor"], n),
+        }
+    )
+    y = pd.Series(
+        (
+            (df["geopolitical_risk"] > 0.6).astype(int)
+            | (df["defect_rate"] > 0.10).astype(int)
+            | (df["on_time_rate"] < 0.70).astype(int)
+        ).clip(0, 1)
+    )
     pipeline, _ = train(df, y)
     save_model(pipeline)
     return pipeline
@@ -179,7 +201,7 @@ def compute_reorder_point(
 ) -> dict[str, float]:
     """Calculate EOQ-based reorder point with safety stock."""
     lead_demand = mean_daily_demand * lead_time_days
-    safety_stock = service_level_z * std_daily_demand * (lead_time_days ** 0.5)
+    safety_stock = service_level_z * std_daily_demand * (lead_time_days**0.5)
     reorder_point = lead_demand + safety_stock
     return {
         "reorder_point": round(reorder_point, 2),

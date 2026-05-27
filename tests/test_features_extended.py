@@ -61,10 +61,16 @@ class TestPipelineConsistency:
     def test_pipeline_same_output_for_same_input(self):
         pipe = build_feature_pipeline()
         row = {
-            "lead_time_days": 30, "on_time_rate": 0.9, "defect_rate": 0.02,
-            "financial_score": 0.8, "geopolitical_risk": 0.3,
-            "capacity_utilization": 0.6, "years_active": 5,
-            "is_sole_source": 0, "country": "US", "category": "electronics",
+            "lead_time_days": 30,
+            "on_time_rate": 0.9,
+            "defect_rate": 0.02,
+            "financial_score": 0.8,
+            "geopolitical_risk": 0.3,
+            "capacity_utilization": 0.6,
+            "years_active": 5,
+            "is_sole_source": 0,
+            "country": "US",
+            "category": "electronics",
         }
         df = pd.DataFrame([row] * 2)
         out = pipe.fit_transform(df)
@@ -74,18 +80,20 @@ class TestPipelineConsistency:
         pipe = build_feature_pipeline()
         rng = np.random.default_rng(0)
         n = 50
-        df = pd.DataFrame({
-            "lead_time_days": rng.integers(5, 90, n),
-            "on_time_rate": rng.uniform(0.5, 1.0, n),
-            "defect_rate": rng.uniform(0.0, 0.15, n),
-            "financial_score": rng.uniform(0.3, 1.0, n),
-            "geopolitical_risk": rng.uniform(0.0, 1.0, n),
-            "capacity_utilization": rng.uniform(0.3, 1.0, n),
-            "years_active": rng.integers(1, 30, n),
-            "is_sole_source": rng.integers(0, 2, n),
-            "country": rng.choice(["US", "CN", "DE"], n),
-            "category": rng.choice(["electronics", "logistics"], n),
-        })
+        df = pd.DataFrame(
+            {
+                "lead_time_days": rng.integers(5, 90, n),
+                "on_time_rate": rng.uniform(0.5, 1.0, n),
+                "defect_rate": rng.uniform(0.0, 0.15, n),
+                "financial_score": rng.uniform(0.3, 1.0, n),
+                "geopolitical_risk": rng.uniform(0.0, 1.0, n),
+                "capacity_utilization": rng.uniform(0.3, 1.0, n),
+                "years_active": rng.integers(1, 30, n),
+                "is_sole_source": rng.integers(0, 2, n),
+                "country": rng.choice(["US", "CN", "DE"], n),
+                "category": rng.choice(["electronics", "logistics"], n),
+            }
+        )
         out = pipe.fit_transform(df)
         assert np.all(np.isfinite(out))
 
@@ -101,11 +109,14 @@ class TestComputeDemandFeaturesEdgeCases:
         result = compute_demand_features(values)
         assert result["mean"] > 0
 
-    @pytest.mark.parametrize("values", [
-        [0.0] * 10,
-        [1e6] * 10,
-        [0.001] * 10,
-    ])
+    @pytest.mark.parametrize(
+        "values",
+        [
+            [0.0] * 10,
+            [1e6] * 10,
+            [0.001] * 10,
+        ],
+    )
     def test_extreme_values(self, values):
         result = compute_demand_features(values)
         assert result["mean"] >= 0

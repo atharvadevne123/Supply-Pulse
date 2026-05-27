@@ -86,14 +86,17 @@ class TestOpsEndpoints:
 
 
 class TestInputBoundaryValidation:
-    @pytest.mark.parametrize("field,value", [
-        ("on_time_rate", 0.0),
-        ("on_time_rate", 1.0),
-        ("defect_rate", 0.0),
-        ("defect_rate", 1.0),
-        ("financial_score", 0.0),
-        ("geopolitical_risk", 1.0),
-    ])
+    @pytest.mark.parametrize(
+        "field,value",
+        [
+            ("on_time_rate", 0.0),
+            ("on_time_rate", 1.0),
+            ("defect_rate", 0.0),
+            ("defect_rate", 1.0),
+            ("financial_score", 0.0),
+            ("geopolitical_risk", 1.0),
+        ],
+    )
     def test_boundary_values_accepted(self, client, supplier_payload, field, value):
         payload = dict(supplier_payload)
         payload[field] = value

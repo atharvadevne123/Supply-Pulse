@@ -21,15 +21,21 @@ class TestLogPrediction:
         log_prediction(
             "disruption",
             {"lead_time_days": 30},
-            0.35, 0.75, "1.0.0", 15.0, db=db_session,
+            0.35,
+            0.75,
+            "1.0.0",
+            15.0,
+            db=db_session,
         )
         from app.database import PredictionLog
+
         count = db_session.query(PredictionLog).count()
         assert count >= 1
 
     def test_log_prediction_stores_model_version(self, db_session):
         log_prediction("disruption", {}, 0.5, None, "2.0.0", None, db=db_session)
         from app.database import PredictionLog
+
         entry = db_session.query(PredictionLog).filter_by(model_version="2.0.0").first()
         assert entry is not None
 
@@ -42,6 +48,7 @@ class TestDetectDriftWithDB:
         set_reference_distribution("test_db_persist", ref)
         detect_drift("test_db_persist", current, db=db_session)
         from app.database import DriftLog
+
         count = db_session.query(DriftLog).filter_by(feature_name="test_db_persist").count()
         assert count >= 1
 

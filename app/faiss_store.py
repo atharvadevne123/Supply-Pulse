@@ -27,17 +27,26 @@ _supplier_records: list[dict[str, Any]] = []
 def _build_embedding(supplier: dict[str, Any]) -> np.ndarray:
     """Convert supplier attributes to a fixed-length feature vector."""
     geo_map = {"CN": 0.9, "RU": 0.9, "KP": 0.9, "IN": 0.5, "MX": 0.5, "US": 0.2, "DE": 0.2}
-    cat_map = {"semiconductor": 0.85, "rare_earth": 0.90, "electronics": 0.70, "textile": 0.40, "logistics": 0.45}
-    vec = np.array([
-        supplier.get("lead_time_days", 30) / 120.0,
-        float(supplier.get("on_time_rate", 0.9)),
-        float(supplier.get("defect_rate", 0.05)),
-        float(supplier.get("financial_score", 0.8)),
-        float(supplier.get("geopolitical_risk", 0.3)),
-        float(supplier.get("capacity_utilization", 0.6)),
-        geo_map.get(str(supplier.get("country", "US")), 0.3),
-        cat_map.get(str(supplier.get("category", "logistics")).lower(), 0.5),
-    ], dtype=np.float32)
+    cat_map = {
+        "semiconductor": 0.85,
+        "rare_earth": 0.90,
+        "electronics": 0.70,
+        "textile": 0.40,
+        "logistics": 0.45,
+    }
+    vec = np.array(
+        [
+            supplier.get("lead_time_days", 30) / 120.0,
+            float(supplier.get("on_time_rate", 0.9)),
+            float(supplier.get("defect_rate", 0.05)),
+            float(supplier.get("financial_score", 0.8)),
+            float(supplier.get("geopolitical_risk", 0.3)),
+            float(supplier.get("capacity_utilization", 0.6)),
+            geo_map.get(str(supplier.get("country", "US")), 0.3),
+            cat_map.get(str(supplier.get("category", "logistics")).lower(), 0.5),
+        ],
+        dtype=np.float32,
+    )
     return vec
 
 

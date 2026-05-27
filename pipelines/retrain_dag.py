@@ -48,9 +48,7 @@ def validate_data_volume(**context) -> None:
     """Abort retraining if fewer than 200 recent predictions exist."""
     n_rows = context["ti"].xcom_pull(key="n_rows", task_ids="fetch_training_data")
     if n_rows < 200:
-        raise ValueError(
-            f"Insufficient training data: {n_rows} rows (minimum 200 required)"
-        )
+        raise ValueError(f"Insufficient training data: {n_rows} rows (minimum 200 required)")
     logger.info("Data volume check passed: %d rows", n_rows)
 
 
@@ -59,27 +57,31 @@ def retrain_model(**context) -> None:
     import numpy as np
     import pandas as pd
 
-    from app.model import save_model, train
+    from app.model import train
 
     rng = np.random.default_rng(int(datetime.utcnow().timestamp()))
     n = 1000
-    df = pd.DataFrame({
-        "lead_time_days": rng.integers(5, 120, n),
-        "on_time_rate": rng.uniform(0.5, 1.0, n),
-        "defect_rate": rng.uniform(0.0, 0.15, n),
-        "financial_score": rng.uniform(0.3, 1.0, n),
-        "geopolitical_risk": rng.uniform(0.0, 1.0, n),
-        "capacity_utilization": rng.uniform(0.3, 1.0, n),
-        "years_active": rng.integers(1, 30, n),
-        "is_sole_source": rng.integers(0, 2, n),
-        "country": rng.choice(["US", "CN", "DE", "IN", "MX"], n),
-        "category": rng.choice(["electronics", "textile", "logistics", "semiconductor"], n),
-    })
-    y = pd.Series((
-        (df["geopolitical_risk"] > 0.6).astype(int)
-        | (df["defect_rate"] > 0.10).astype(int)
-        | (df["on_time_rate"] < 0.70).astype(int)
-    ).clip(0, 1))
+    df = pd.DataFrame(
+        {
+            "lead_time_days": rng.integers(5, 120, n),
+            "on_time_rate": rng.uniform(0.5, 1.0, n),
+            "defect_rate": rng.uniform(0.0, 0.15, n),
+            "financial_score": rng.uniform(0.3, 1.0, n),
+            "geopolitical_risk": rng.uniform(0.0, 1.0, n),
+            "capacity_utilization": rng.uniform(0.3, 1.0, n),
+            "years_active": rng.integers(1, 30, n),
+            "is_sole_source": rng.integers(0, 2, n),
+            "country": rng.choice(["US", "CN", "DE", "IN", "MX"], n),
+            "category": rng.choice(["electronics", "textile", "logistics", "semiconductor"], n),
+        }
+    )
+    y = pd.Series(
+        (
+            (df["geopolitical_risk"] > 0.6).astype(int)
+            | (df["defect_rate"] > 0.10).astype(int)
+            | (df["on_time_rate"] < 0.70).astype(int)
+        ).clip(0, 1)
+    )
 
     pipeline, metrics = train(df, y)
     logger.info("Retraining metrics: %s", metrics)
@@ -104,22 +106,25 @@ def publish_model(**context) -> None:
 
     rng = np.random.default_rng(42)
     n = 500
-    df = pd.DataFrame({
-        "lead_time_days": rng.integers(5, 120, n),
-        "on_time_rate": rng.uniform(0.5, 1.0, n),
-        "defect_rate": rng.uniform(0.0, 0.15, n),
-        "financial_score": rng.uniform(0.3, 1.0, n),
-        "geopolitical_risk": rng.uniform(0.0, 1.0, n),
-        "capacity_utilization": rng.uniform(0.3, 1.0, n),
-        "years_active": rng.integers(1, 30, n),
-        "is_sole_source": rng.integers(0, 2, n),
-        "country": rng.choice(["US", "CN", "DE", "IN", "MX"], n),
-        "category": rng.choice(["electronics", "textile", "logistics", "semiconductor"], n),
-    })
-    y = pd.Series((
-        (df["geopolitical_risk"] > 0.6).astype(int)
-        | (df["defect_rate"] > 0.10).astype(int)
-    ).clip(0, 1))
+    df = pd.DataFrame(
+        {
+            "lead_time_days": rng.integers(5, 120, n),
+            "on_time_rate": rng.uniform(0.5, 1.0, n),
+            "defect_rate": rng.uniform(0.0, 0.15, n),
+            "financial_score": rng.uniform(0.3, 1.0, n),
+            "geopolitical_risk": rng.uniform(0.0, 1.0, n),
+            "capacity_utilization": rng.uniform(0.3, 1.0, n),
+            "years_active": rng.integers(1, 30, n),
+            "is_sole_source": rng.integers(0, 2, n),
+            "country": rng.choice(["US", "CN", "DE", "IN", "MX"], n),
+            "category": rng.choice(["electronics", "textile", "logistics", "semiconductor"], n),
+        }
+    )
+    y = pd.Series(
+        ((df["geopolitical_risk"] > 0.6).astype(int) | (df["defect_rate"] > 0.10).astype(int)).clip(
+            0, 1
+        )
+    )
     pipeline, metrics = train(df, y)
     save_model(pipeline)
     logger.info("Model published successfully with AUC=%.4f", metrics["cv_auc_mean"])
@@ -150,9 +155,13 @@ if AIRFLOW_AVAILABLE:
         description="Weekly retraining pipeline for Supply-Pulse disruption model",
     ) as dag:
         t_fetch = PythonOperator(task_id="fetch_training_data", python_callable=fetch_training_data)
-        t_validate_data = PythonOperator(task_id="validate_data_volume", python_callable=validate_data_volume)
+        t_validate_data = PythonOperator(
+            task_id="validate_data_volume", python_callable=validate_data_volume
+        )
         t_retrain = PythonOperator(task_id="retrain_model", python_callable=retrain_model)
-        t_validate_model = PythonOperator(task_id="validate_model_quality", python_callable=validate_model_quality)
+        t_validate_model = PythonOperator(
+            task_id="validate_model_quality", python_callable=validate_model_quality
+        )
         t_publish = PythonOperator(task_id="publish_model", python_callable=publish_model)
         t_drift = PythonOperator(task_id="run_drift_check", python_callable=run_drift_check)
 

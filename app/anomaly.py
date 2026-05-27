@@ -25,7 +25,12 @@ def detect_zscore_anomalies(
     """
     arr = np.array(values, dtype=float)
     if len(arr) < 3:
-        return {"anomaly_indices": [], "z_scores": [], "method": "zscore", "reason": "insufficient_data"}
+        return {
+            "anomaly_indices": [],
+            "z_scores": [],
+            "method": "zscore",
+            "reason": "insufficient_data",
+        }
     mean = float(arr.mean())
     std = float(arr.std()) if arr.std() > 0 else 1.0
     z_scores = np.abs((arr - mean) / std)
@@ -96,9 +101,16 @@ def detect_demand_spikes(
         return {"spike_indices": [], "reason": "insufficient_data"}
     spikes = []
     for i in range(window, len(arr)):
-        baseline = float(np.mean(arr[i - window:i]))
+        baseline = float(np.mean(arr[i - window : i]))
         if baseline > 0 and arr[i] > spike_ratio * baseline:
-            spikes.append({"index": i, "value": float(arr[i]), "baseline": round(baseline, 2), "ratio": round(float(arr[i] / baseline), 2)})
+            spikes.append(
+                {
+                    "index": i,
+                    "value": float(arr[i]),
+                    "baseline": round(baseline, 2),
+                    "ratio": round(float(arr[i] / baseline), 2),
+                }
+            )
     return {
         "spike_indices": [s["index"] for s in spikes],
         "spikes": spikes,

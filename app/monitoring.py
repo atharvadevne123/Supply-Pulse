@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import logging
 import time
-from datetime import datetime
 from typing import Any
 
 import numpy as np
@@ -74,9 +73,7 @@ def detect_drift(
             db.rollback()
 
     if drift_detected:
-        logger.warning(
-            "Drift detected on '%s': KS=%.4f, p=%.4f", feature_name, ks_stat, p_value
-        )
+        logger.warning("Drift detected on '%s': KS=%.4f, p=%.4f", feature_name, ks_stat, p_value)
 
     return {
         "feature": feature_name,
@@ -97,9 +94,7 @@ def run_full_drift_scan(
         result = detect_drift(feature_name, np.array(values), db=db)
         results.append(result)
     drifted = [r for r in results if r.get("drift_detected")]
-    logger.info(
-        "Drift scan complete: %d/%d features drifted", len(drifted), len(results)
-    )
+    logger.info("Drift scan complete: %d/%d features drifted", len(drifted), len(results))
     return results
 
 
