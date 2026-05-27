@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+import logging
 import os
 from datetime import datetime
 from typing import Generator
+
+logger = logging.getLogger(__name__)
 
 from sqlalchemy import (
     JSON,
@@ -126,3 +129,4 @@ def get_db() -> Generator[Session, None, None]:
 def init_db() -> None:
     """Create all tables if they do not exist."""
     Base.metadata.create_all(bind=engine)
+    logger.info("Database tables initialized")
