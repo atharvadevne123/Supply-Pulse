@@ -164,6 +164,54 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines.
 
 ---
 
+## Available Endpoints
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/health` | Service health check |
+| GET | `/version` | App and model version |
+| GET | `/metrics` | Prediction statistics |
+| GET | `/readyz` | Kubernetes readiness probe |
+| POST | `/api/v1/predict/disruption` | Disruption risk prediction |
+| POST | `/api/v1/inventory/reorder-point` | EOQ reorder calculation |
+| POST | `/api/v1/monitoring/drift` | KS-test drift scan |
+| GET | `/api/v1/monitoring/stats` | Inference statistics |
+| POST | `/api/v1/demand/forecast` | Time-series demand forecast |
+| POST | `/api/v1/suppliers/similar` | FAISS similarity search |
+| POST | `/api/v1/suppliers/scorecard` | Multi-dimensional scorecard |
+
+---
+
+## Project Structure
+
+```
+Supply-Pulse/
+├── app/
+│   ├── main.py          # FastAPI app and endpoints
+│   ├── model.py         # XGB+LGB+RF ensemble training
+│   ├── features.py      # 7-stage feature pipeline
+│   ├── monitoring.py    # KS-test drift detection
+│   ├── database.py      # SQLAlchemy models and session
+│   ├── demand_forecast.py # Time-series forecasting
+│   ├── faiss_store.py   # Similarity search
+│   ├── supplier_scorer.py # Scorecard generation
+│   ├── anomaly.py       # Z-score and IQR detection
+│   ├── risk_report.py   # Structured risk reports
+│   ├── validators.py    # Input validation utilities
+│   ├── metrics.py       # Telemetry counters
+│   ├── cache.py         # TTL caching decorator
+│   └── config.py        # Settings singleton
+├── pipelines/
+│   └── retrain_dag.py   # Airflow retraining DAG
+├── tests/               # pytest test suite (300+ tests)
+├── scripts/             # CLI tools: seed_data, train_model
+├── alembic/             # Database migrations
+├── Dockerfile           # Container build
+└── docker-compose.yml   # Production deployment
+```
+
+---
+
 ## License
 
 MIT — see [LICENSE](LICENSE).
