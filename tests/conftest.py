@@ -23,12 +23,16 @@ def db_engine():
 
 @pytest.fixture
 def db_session(db_engine):
-    TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=db_engine)
+    connection = db_engine.connect()
+    transaction = connection.begin()
+    TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=connection)
     session = TestingSessionLocal()
     try:
         yield session
     finally:
         session.close()
+        transaction.rollback()
+        connection.close()
 
 
 @pytest.fixture

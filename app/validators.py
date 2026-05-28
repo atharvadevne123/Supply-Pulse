@@ -111,7 +111,8 @@ def sanitize_supplier_fields(data: dict[str, Any]) -> dict[str, Any]:
     safe["capacity_utilization"] = float(
         max(0.0, min(1.0, safe.get("capacity_utilization") or 0.6))
     )
-    safe["lead_time_days"] = max(1, int(safe.get("lead_time_days") or 30))
+    _ltd = safe.get("lead_time_days")
+    safe["lead_time_days"] = max(1, int(_ltd if _ltd is not None else 30))
     safe["years_active"] = max(0, int(safe.get("years_active") or 5))
     safe["is_sole_source"] = int(bool(safe.get("is_sole_source", 0)))
     safe["country"] = str(safe.get("country") or "US")[:50]
