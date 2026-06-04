@@ -19,7 +19,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install build tools
-        run: pip install --upgrade pip "build>=1.2" "setuptools>=68" wheel twine
+        run: pip install --upgrade pip "build>=1.2" "setuptools>=68" wheel "twine>=5.0"
 
       - name: Build wheel
         run: python -m build --sdist --wheel
