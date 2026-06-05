@@ -9,6 +9,13 @@ from typing import Any, Callable
 
 logger = logging.getLogger(__name__)
 
+__all__ = [
+    "ttl_cache",
+    "get_cache_stats",
+    "clear_cache",
+    "evict_expired",
+]
+
 _cache: dict[str, tuple[Any, float]] = {}
 _MAX_CACHE_ENTRIES = 1_000
 
