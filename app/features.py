@@ -199,9 +199,9 @@ def compute_demand_features(demands: list[float]) -> dict[str, float]:
     """Extract statistical demand features from a history sequence."""
     arr = np.array(demands, dtype=float)
     if len(arr) == 0:
-        return {"mean": 0.0, "std": 0.0, "cv": 0.0, "trend": 0.0, "max": 0.0}
+        return {"mean": 0.0, "std": 0.0, "cv": 0.0, "trend": 0.0, "min": 0.0, "max": 0.0}
     mean = float(arr.mean())
     std = float(arr.std()) if len(arr) > 1 else 0.0
     cv = std / mean if mean > 0 else 0.0
     trend = float(np.polyfit(np.arange(len(arr)), arr, 1)[0]) if len(arr) > 1 else 0.0
-    return {"mean": mean, "std": std, "cv": cv, "trend": trend, "max": float(arr.max())}
+    return {"mean": mean, "std": std, "cv": cv, "trend": trend, "min": float(arr.min()), "max": float(arr.max())}

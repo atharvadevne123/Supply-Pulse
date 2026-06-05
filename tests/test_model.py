@@ -175,6 +175,10 @@ class TestRiskLabel:
 
 
 class TestReorderPoint:
+    @pytest.fixture(scope="class")
+    def trained_pipeline(self):
+        return _train_default_model()
+
     @pytest.mark.parametrize(
         "mean,std,lead,z,expected_min",
         [
