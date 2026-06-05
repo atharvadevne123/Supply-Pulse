@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 
 logger = logging.getLogger(__name__)
@@ -93,7 +93,7 @@ def build_risk_report(
     report = {
         "supplier_id": supplier_id,
         "supplier_name": supplier_name,
-        "generated_at": datetime.utcnow().isoformat(),
+        "generated_at": datetime.now(timezone.utc).isoformat(),
         "disruption_risk": disruption_risk,
         "disruption_label": disruption_result.get("disruption_label", "UNKNOWN"),
         "severity": severity,
