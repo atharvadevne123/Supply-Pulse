@@ -8,6 +8,13 @@ from typing import Any
 
 logger = logging.getLogger(__name__)
 
+__all__ = [
+    "RISK_THRESHOLDS",
+    "classify_risk",
+    "generate_recommendations",
+    "build_risk_report",
+]
+
 RISK_THRESHOLDS = {
     "CRITICAL": 0.80,
     "HIGH": 0.60,
