@@ -6,6 +6,14 @@ import logging
 import time
 from typing import Any
 
+__all__ = [
+    "set_reference_distribution",
+    "detect_drift",
+    "run_full_drift_scan",
+    "log_prediction",
+    "compute_prediction_stats",
+]
+
 import numpy as np
 from scipy import stats
 from sqlalchemy.orm import Session
