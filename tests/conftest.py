@@ -89,3 +89,21 @@ def reorder_payload():
         "lead_time_days": 14,
         "service_level": 0.95,
     }
+
+
+@pytest.fixture
+def risk_report_payload(supplier_payload):
+    return {
+        "supplier_id": "SUPP-001",
+        "supplier_name": "Acme Electronics GmbH",
+        "supplier": supplier_payload,
+    }
+
+
+@pytest.fixture
+def anomaly_payload():
+    return {
+        "values": [100.0] * 18 + [500.0, 600.0],
+        "method": "zscore",
+        "threshold": 2.5,
+    }
