@@ -15,6 +15,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app import __version__
+from app.anomaly import detect_demand_spikes, detect_iqr_anomalies, detect_zscore_anomalies
 from app.database import get_db, init_db
 from app.demand_forecast import compute_demand_statistics, forecast_demand
 from app.faiss_store import find_similar_suppliers
@@ -297,3 +298,37 @@ def supplier_risk_report(
         db=db,
     )
     return report
+
+
+class AnomalyDetectionInput(BaseModel):
+    values: list[float] = Field(..., min_length=1, description="Time series values to analyse")
+    method: str = Field(
+        default="zscore",
+        description="Detection method: 'zscore', 'iqr', or 'spikes'",
+    )
+    threshold: float = Field(default=2.5, gt=0, description="Z-score threshold (zscore method)")
+    k: float = Field(default=1.5, gt=0, description="IQR multiplier (iqr method)")
+    window: int = Field(default=3, ge=1, le=50, description="Rolling window (spikes method)")
+    spike_ratio: float = Field(default=2.0, gt=1.0, description="Spike ratio (spikes method)")
+
+
+@app.post("/api/v1/demand/anomalies", tags=["demand"])
+def detect_anomalies(payload: AnomalyDetectionInput) -> dict[str, Any]:
+    """Detect anomalies in a demand time series using Z-score, IQR, or spike detection.
+
+    Returns anomaly indices, values, and method-specific statistics.
+    Raises 422 if an unsupported method is specified.
+    """
+    method = payload.method.lower()
+    if method == "zscore":
+        return detect_zscore_anomalies(payload.values, threshold=payload.threshold)
+    if method == "iqr":
+        return detect_iqr_anomalies(payload.values, k=payload.k)
+    if method == "spikes":
+        return detect_demand_spikes(
+            payload.values, window=payload.window, spike_ratio=payload.spike_ratio
+        )
+    raise HTTPException(
+        status_code=422,
+        detail=f"Unsupported method '{method}'. Choose from: zscore, iqr, spikes",
+    )
