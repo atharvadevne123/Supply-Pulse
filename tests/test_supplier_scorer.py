@@ -144,3 +144,42 @@ class TestGrade:
     )
     def test_grade_boundaries(self, score, expected):
         assert _grade(score) == expected
+
+
+class TestScoreCardEdgeCases:
+    def test_scorecard_total_in_range(self):
+        for supplier in [GOOD_SUPPLIER, BAD_SUPPLIER]:
+            card = compute_scorecard(supplier)
+            assert 0.0 <= card["total_score"] <= 1.0
+
+    def test_scorecard_weights_sum_to_one(self):
+        card = compute_scorecard(GOOD_SUPPLIER)
+        from app.supplier_scorer import SCORE_WEIGHTS
+        assert abs(sum(SCORE_WEIGHTS.values()) - 1.0) < 0.001
+
+    def test_scorecard_components_in_range(self):
+        card = compute_scorecard(GOOD_SUPPLIER)
+        for key, val in card["components"].items():
+            assert 0.0 <= val <= 1.0, f"{key} score {val} out of range"
+
+    def test_sole_source_reduces_geopolitical_score(self):
+        base = {"geopolitical_risk": 0.3, "is_sole_source": 0}
+        sole = {"geopolitical_risk": 0.3, "is_sole_source": 1}
+        from app.supplier_scorer import score_geopolitical
+        assert score_geopolitical(**sole) < score_geopolitical(**base)
+
+    @pytest.mark.parametrize("years,defect", [(1, 0.01), (10, 0.01), (50, 0.01)])
+    def test_quality_improves_with_experience(self, years, defect):
+        from app.supplier_scorer import score_quality
+        score = score_quality(defect, years)
+        assert 0.0 <= score <= 1.0
+
+    def test_delivery_perfect_on_time_rate(self):
+        from app.supplier_scorer import score_delivery
+        score = score_delivery(1.0, 1)
+        assert score > 0.9
+
+    def test_delivery_low_on_time_rate(self):
+        from app.supplier_scorer import score_delivery
+        score = score_delivery(0.3, 365)
+        assert score <= 0.3
