@@ -39,3 +39,28 @@ filterwarnings = [
     "ignore::UserWarning",
     "ignore::FutureWarning",
 ]
+
+[tool.mypy]
+python_version = "3.11"
+strict = false
+ignore_missing_imports = true
+warn_return_any = true
+warn_unused_ignores = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+no_implicit_optional = true
+
+[tool.coverage.run]
+source = ["app"]
+omit = ["tests/*", "scripts/*", "alembic/*"]
+
+[tool.coverage.report]
+show_missing = true
+fail_under = 60
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise NotImplementedError",
+    "if TYPE_CHECKING:",
+]
