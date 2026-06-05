@@ -126,6 +126,19 @@ def log_prediction(
         db.rollback()
 
 
+def _aggregate_predictions(predictions: list[float]) -> dict[str, Any]:
+    """Compute summary statistics from a list of raw prediction scores."""
+    total = len(predictions)
+    high_risk = sum(1 for p in predictions if p >= 0.70)
+    return {
+        "total_predictions": total,
+        "avg_prediction": round(float(np.mean(predictions)), 4),
+        "std_prediction": round(float(np.std(predictions)), 4),
+        "high_risk_count": high_risk,
+        "high_risk_pct": round(high_risk / total * 100, 2),
+    }
+
+
 def compute_prediction_stats(db: Session) -> dict[str, Any]:
     """Aggregate prediction statistics from the log table."""
     try:
@@ -134,14 +147,7 @@ def compute_prediction_stats(db: Session) -> dict[str, Any]:
             return {"total_predictions": 0, "avg_prediction": None, "high_risk_count": 0}
         rows = db.query(PredictionLog.prediction).all()
         predictions = [r.prediction for r in rows]
-        high_risk = sum(1 for p in predictions if p >= 0.70)
-        return {
-            "total_predictions": total,
-            "avg_prediction": round(float(np.mean(predictions)), 4),
-            "std_prediction": round(float(np.std(predictions)), 4),
-            "high_risk_count": high_risk,
-            "high_risk_pct": round(high_risk / total * 100, 2),
-        }
+        return _aggregate_predictions(predictions)
     except Exception:
         logger.exception("Error computing prediction stats")
         return {"total_predictions": 0, "error": "stats_unavailable"}
