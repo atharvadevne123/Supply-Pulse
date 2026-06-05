@@ -177,8 +177,10 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines.
 | POST | `/api/v1/monitoring/drift` | KS-test drift scan |
 | GET | `/api/v1/monitoring/stats` | Inference statistics |
 | POST | `/api/v1/demand/forecast` | Time-series demand forecast |
+| POST | `/api/v1/demand/anomalies` | Z-score / IQR / spike detection |
 | POST | `/api/v1/suppliers/similar` | FAISS similarity search |
 | POST | `/api/v1/suppliers/scorecard` | Multi-dimensional scorecard |
+| POST | `/api/v1/suppliers/risk-report` | Full risk report (prediction + scorecard + recommendations) |
 
 ---
 
@@ -204,7 +206,7 @@ Supply-Pulse/
 ├── pipelines/
 │   └── retrain_dag.py   # Airflow retraining DAG
 ├── tests/               # pytest test suite (300+ tests)
-├── scripts/             # CLI tools: seed_data, train_model
+├── scripts/             # CLI tools: seed_data, train_model, check_health
 ├── alembic/             # Database migrations
 ├── Dockerfile           # Container build
 └── docker-compose.yml   # Production deployment
