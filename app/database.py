@@ -23,6 +23,19 @@ from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 
 logger = logging.getLogger(__name__)
 
+__all__ = [
+    "Base",
+    "Supplier",
+    "Product",
+    "DemandRecord",
+    "PredictionLog",
+    "DriftLog",
+    "SessionLocal",
+    "engine",
+    "get_db",
+    "init_db",
+]
+
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./supply_pulse.db")
 
 _is_sqlite = DATABASE_URL.startswith("sqlite")
