@@ -46,3 +46,35 @@ class TestGetSettings:
         s1 = get_settings()
         s2 = get_settings()
         assert s1 is s2
+
+
+class TestSettingsEdgeCases:
+    def test_default_drift_threshold(self):
+        s = Settings()
+        assert s.drift_p_value_threshold == 0.05
+
+    def test_default_drift_min_sample_size(self):
+        s = Settings()
+        assert s.drift_min_sample_size == 30
+
+    def test_default_workers(self):
+        s = Settings()
+        assert s.api_workers >= 1
+
+    def test_default_host(self):
+        s = Settings()
+        assert s.api_host in ("0.0.0.0", "localhost", "127.0.0.1")
+
+    def test_env_override_port(self, monkeypatch):
+        monkeypatch.setenv("API_PORT", "9000")
+        s = Settings()
+        assert s.api_port == 9000
+
+    def test_env_override_drift_threshold(self, monkeypatch):
+        monkeypatch.setenv("DRIFT_P_VALUE_THRESHOLD", "0.01")
+        s = Settings()
+        assert s.drift_p_value_threshold == 0.01
+
+    def test_repr_contains_port(self):
+        s = Settings()
+        assert "port=" in repr(s)
