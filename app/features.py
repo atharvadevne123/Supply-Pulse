@@ -21,6 +21,7 @@ __all__ = [
     "CategoryRiskEncoder",
     "DropCategoricalTransformer",
     "build_feature_pipeline",
+    "build_raw_dataframe",
     "compute_demand_features",
 ]
 
@@ -174,9 +175,24 @@ def build_feature_pipeline() -> Pipeline:
     )
 
 
+_COLUMN_DEFAULTS: dict[str, Any] = {
+    "lead_time_days": 30,
+    "on_time_rate": 0.9,
+    "defect_rate": 0.02,
+    "financial_score": 0.8,
+    "geopolitical_risk": 0.3,
+    "capacity_utilization": 0.6,
+    "years_active": 5,
+    "is_sole_source": 0,
+    "country": "US",
+    "category": "logistics",
+}
+
+
 def build_raw_dataframe(supplier_data: dict[str, Any]) -> pd.DataFrame:
-    """Convert a single supplier dict into a one-row DataFrame."""
-    return pd.DataFrame([supplier_data])
+    """Convert a single supplier dict into a one-row DataFrame with defaults applied."""
+    row = {**_COLUMN_DEFAULTS, **supplier_data}
+    return pd.DataFrame([row])
 
 
 def compute_demand_features(demands: list[float]) -> dict[str, float]:
