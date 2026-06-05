@@ -109,3 +109,44 @@ class TestBuildRiskReport:
     def test_report_has_n_recommendations(self):
         report = build_risk_report("S-004", "Corp", MOCK_DISRUPTION_HIGH, MOCK_SCORECARD_BAD)
         assert report["n_recommendations"] == len(report["recommendations"])
+
+    def test_report_generated_at_is_iso_format(self):
+        import datetime
+        report = build_risk_report("S-005", "Corp", MOCK_DISRUPTION_LOW, MOCK_SCORECARD_GOOD)
+        dt = datetime.datetime.fromisoformat(report["generated_at"])
+        assert dt is not None
+
+    def test_report_total_score_matches_scorecard(self):
+        report = build_risk_report("S-006", "Corp", MOCK_DISRUPTION_LOW, MOCK_SCORECARD_GOOD)
+        assert report["total_score"] == MOCK_SCORECARD_GOOD["total_score"]
+
+    def test_report_components_matches_scorecard(self):
+        report = build_risk_report("S-007", "Corp", MOCK_DISRUPTION_HIGH, MOCK_SCORECARD_BAD)
+        assert report["components"] == MOCK_SCORECARD_BAD["components"]
+
+    @pytest.mark.parametrize("risk_score,expected_severity", [
+        (0.81, "CRITICAL"),
+        (0.61, "HIGH"),
+        (0.41, "MEDIUM"),
+        (0.10, "LOW"),
+    ])
+    def test_severity_thresholds(self, risk_score, expected_severity):
+        disruption = {"disruption_risk": risk_score, "disruption_label": "TEST"}
+        report = build_risk_report("S-P", "Corp", disruption, MOCK_SCORECARD_GOOD)
+        assert report["severity"] == expected_severity
+
+    def test_geopolitical_risk_triggers_recommendation(self):
+        scorecard_geo = {
+            **MOCK_SCORECARD_GOOD,
+            "components": {**MOCK_SCORECARD_GOOD["components"], "geopolitical": 0.3},
+        }
+        recs = generate_recommendations(0.50, scorecard_geo)
+        assert any("geopolit" in r.lower() or "dual-source" in r.lower() for r in recs)
+
+    def test_financial_risk_triggers_recommendation(self):
+        scorecard_fin = {
+            **MOCK_SCORECARD_GOOD,
+            "components": {**MOCK_SCORECARD_GOOD["components"], "financial": 0.4},
+        }
+        recs = generate_recommendations(0.30, scorecard_fin)
+        assert any("financial" in r.lower() for r in recs)
