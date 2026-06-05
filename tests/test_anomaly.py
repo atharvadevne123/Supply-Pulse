@@ -98,3 +98,33 @@ class TestDemandSpikeDetection:
         history = [100.0] * 10 + [300.0]
         result = detect_demand_spikes(history, spike_ratio=spike_ratio)
         assert isinstance(result["n_spikes"], int)
+
+    def test_spike_returns_window_and_ratio_fields(self):
+        result = detect_demand_spikes([100.0] * 10, window=3, spike_ratio=2.0)
+        assert result["window"] == 3
+        assert result["spike_ratio"] == 2.0
+
+    def test_spike_indices_are_within_range(self):
+        history = [100.0] * 12 + [500.0]
+        result = detect_demand_spikes(history, window=3)
+        for idx in result["spike_indices"]:
+            assert 0 <= idx < len(history)
+
+    def test_zscore_mean_and_std_reported(self):
+        values = [10.0, 20.0, 30.0, 40.0, 50.0, 60.0, 70.0, 80.0, 90.0, 100.0]
+        result = detect_zscore_anomalies(values)
+        assert "mean" in result
+        assert "std" in result
+        assert result["mean"] > 0
+
+    @pytest.mark.parametrize("n_values", [3, 10, 50, 200])
+    def test_zscore_scales_with_series_length(self, n_values):
+        values = [float(i) for i in range(n_values)]
+        result = detect_zscore_anomalies(values)
+        assert len(result.get("z_scores", [])) == n_values
+
+    def test_iqr_anomaly_values_outside_fences(self):
+        values = [100.0] * 18 + [5000.0, -5000.0]
+        result = detect_iqr_anomalies(values)
+        for v in result.get("anomaly_values", []):
+            assert v > result["upper_fence"] or v < result["lower_fence"]
