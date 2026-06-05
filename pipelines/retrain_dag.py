@@ -38,7 +38,7 @@ def fetch_training_data(**context) -> None:
     with engine.connect() as conn:
         rows = conn.execute(
             text("SELECT COUNT(*) FROM prediction_logs WHERE created_at >= :cutoff"),
-            {"cutoff": datetime.utcnow() - timedelta(days=30)},
+            {"cutoff": datetime.now(tz=None) - timedelta(days=30)},
         ).scalar()
     logger.info("Found %d recent prediction rows for retraining", rows)
     context["ti"].xcom_push(key="n_rows", value=rows)
