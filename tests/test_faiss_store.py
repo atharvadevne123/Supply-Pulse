@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import pytest
+
 from app.faiss_store import (
     _build_embedding,
     _fallback_similarity,
@@ -141,3 +143,33 @@ class TestFallbackSimilarity:
         results = _fallback_similarity(SAMPLE_SUPPLIERS[0], top_k=3)
         assert results == []
         fs._supplier_records = SAMPLE_SUPPLIERS
+
+
+class TestGetIndexSize:
+    def test_get_index_size_returns_int(self):
+        from app.faiss_store import get_index_size
+        size = get_index_size()
+        assert isinstance(size, int)
+
+    def test_get_index_size_after_build_matches_supplier_count(self):
+        from app.faiss_store import build_index, get_index_size
+        build_index(SAMPLE_SUPPLIERS)
+        assert get_index_size() == len(SAMPLE_SUPPLIERS)
+
+
+class TestFaissStoreEdgeCases:
+    def test_find_similar_with_unknown_country(self):
+        query = {**SAMPLE_SUPPLIERS[0], "country": "XY"}
+        results = find_similar_suppliers(query, top_k=3)
+        assert isinstance(results, list)
+
+    def test_find_similar_top_k_larger_than_index(self):
+        build_index(SAMPLE_SUPPLIERS)
+        results = find_similar_suppliers(SAMPLE_SUPPLIERS[0], top_k=100)
+        assert len(results) <= len(SAMPLE_SUPPLIERS)
+
+    @pytest.mark.parametrize("top_k", [1, 2, 3])
+    def test_find_similar_respects_top_k(self, top_k):
+        build_index(SAMPLE_SUPPLIERS)
+        results = find_similar_suppliers(SAMPLE_SUPPLIERS[0], top_k=top_k)
+        assert len(results) <= top_k
