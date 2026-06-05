@@ -17,6 +17,8 @@ except ImportError:
     FAISS_AVAILABLE = False
     logger.info("faiss-cpu not installed - similarity search unavailable")
 
+__all__ = ["build_index", "find_similar_suppliers", "get_index_size"]
+
 EMBEDDING_DIM = 8
 
 _index: Any = None
@@ -94,6 +96,11 @@ def find_similar_suppliers(
         rec["similarity_score"] = round(float(score), 4)
         results.append(rec)
     return results
+
+
+def get_index_size() -> int:
+    """Return number of suppliers currently in the FAISS index (0 if not built)."""
+    return len(_supplier_ids)
 
 
 def _fallback_similarity(
