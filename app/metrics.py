@@ -9,6 +9,15 @@ from typing import Any
 
 logger = logging.getLogger(__name__)
 
+__all__ = [
+    "increment",
+    "record_latency",
+    "get_counter",
+    "get_histogram_stats",
+    "get_all_metrics",
+    "reset_metrics",
+]
+
 _counters: dict[str, int] = defaultdict(int)
 _histograms: dict[str, list[float]] = defaultdict(list)
 _start_time: float = time.time()
