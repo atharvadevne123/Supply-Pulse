@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from functools import lru_cache
 from typing import Any
 
 logger = logging.getLogger(__name__)
@@ -16,6 +17,7 @@ SCORE_WEIGHTS = {
 }
 
 
+@lru_cache(maxsize=512)
 def score_delivery(on_time_rate: float, lead_time_days: int) -> float:
     """Score supplier delivery reliability (0=worst, 1=best).
 
@@ -30,6 +32,7 @@ def score_delivery(on_time_rate: float, lead_time_days: int) -> float:
     return float(max(0.0, min(1.0, on_time_rate - lead_penalty)))
 
 
+@lru_cache(maxsize=512)
 def score_quality(defect_rate: float, years_active: int) -> float:
     """Score supplier quality based on defect rate and track record.
 
@@ -44,6 +47,7 @@ def score_quality(defect_rate: float, years_active: int) -> float:
     return float(max(0.0, min(1.0, 1.0 - defect_rate * 8 + maturity_bonus)))
 
 
+@lru_cache(maxsize=256)
 def score_financial(financial_score: float) -> float:
     """Pass-through financial health score.
 
@@ -56,6 +60,7 @@ def score_financial(financial_score: float) -> float:
     return float(max(0.0, min(1.0, financial_score)))
 
 
+@lru_cache(maxsize=512)
 def score_geopolitical(geopolitical_risk: float, is_sole_source: int) -> float:
     """Score geopolitical exposure with sole-source penalty.
 
@@ -71,6 +76,7 @@ def score_geopolitical(geopolitical_risk: float, is_sole_source: int) -> float:
     return float(max(0.0, min(1.0, base - sole_penalty)))
 
 
+@lru_cache(maxsize=256)
 def score_capacity(capacity_utilization: float) -> float:
     """Score capacity slack — higher utilization reduces flexibility.
 
