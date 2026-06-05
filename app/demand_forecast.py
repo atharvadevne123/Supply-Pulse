@@ -9,6 +9,11 @@ import numpy as np
 
 logger = logging.getLogger(__name__)
 
+__all__ = [
+    "forecast_demand",
+    "compute_demand_statistics",
+]
+
 
 def _simple_moving_average(values: np.ndarray, window: int) -> np.ndarray:
     """Compute simple moving average with valid-mode convolution."""
