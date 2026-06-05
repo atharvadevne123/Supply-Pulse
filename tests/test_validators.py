@@ -89,3 +89,47 @@ class TestSanitizeSupplierFields:
     def test_lead_time_minimum(self, lead_time, expected):
         safe = sanitize_supplier_fields({"lead_time_days": lead_time})
         assert safe["lead_time_days"] == expected
+
+
+class TestValidatorEdgeCases:
+    def test_validate_supplier_all_valid_rates(self):
+        data = {
+            "on_time_rate": 0.0,
+            "defect_rate": 0.0,
+            "financial_score": 0.0,
+            "geopolitical_risk": 0.0,
+            "capacity_utilization": 0.0,
+        }
+        errors = validate_supplier_input(data)
+        assert errors == []
+
+    def test_validate_supplier_all_max_valid_rates(self):
+        data = {
+            "on_time_rate": 1.0,
+            "defect_rate": 1.0,
+            "financial_score": 1.0,
+            "geopolitical_risk": 1.0,
+            "capacity_utilization": 1.0,
+        }
+        errors = validate_supplier_input(data)
+        assert errors == []
+
+    def test_validate_demand_history_single_value(self):
+        errors = validate_demand_history([100.0])
+        assert errors == []
+
+    def test_validate_demand_history_all_zeros(self):
+        errors = validate_demand_history([0.0, 0.0, 0.0])
+        assert errors == []
+
+    @pytest.mark.parametrize("rate_field", [
+        "on_time_rate", "defect_rate", "financial_score", "geopolitical_risk", "capacity_utilization"
+    ])
+    def test_boundary_values_exactly_zero_and_one(self, rate_field):
+        for boundary in (0.0, 1.0):
+            errors = validate_supplier_input({rate_field: boundary})
+            assert errors == [], f"{rate_field}={boundary} should be valid"
+
+    def test_sanitize_category_truncated(self):
+        safe = sanitize_supplier_fields({"category": "A" * 200})
+        assert len(safe["category"]) <= 100
