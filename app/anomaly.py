@@ -9,6 +9,8 @@ import numpy as np
 
 logger = logging.getLogger(__name__)
 
+__all__ = ["detect_zscore_anomalies", "detect_iqr_anomalies", "detect_demand_spikes"]
+
 
 def detect_zscore_anomalies(
     values: list[float],
