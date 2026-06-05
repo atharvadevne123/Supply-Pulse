@@ -24,6 +24,7 @@ from app.monitoring import (
     log_prediction,
     run_full_drift_scan,
 )
+from app.risk_report import build_risk_report
 from app.supplier_scorer import compute_scorecard
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
@@ -255,3 +256,44 @@ def supplier_scorecard(payload: SupplierInput) -> dict[str, Any]:
     a weighted total score (0-1), and a letter grade (A through F).
     """
     return compute_scorecard(payload.model_dump())
+
+
+class RiskReportInput(BaseModel):
+    supplier_id: str = Field(..., max_length=100, description="Unique supplier identifier")
+    supplier_name: str = Field(..., max_length=255, description="Human-readable supplier name")
+    supplier: SupplierInput
+
+
+@app.post("/api/v1/suppliers/risk-report", tags=["suppliers"])
+def supplier_risk_report(
+    payload: RiskReportInput,
+    db: Session = Depends(get_db),
+) -> dict[str, Any]:
+    """Generate a full supplier risk report combining ML prediction and scorecard.
+
+    Combines /predict/disruption and /suppliers/scorecard into a single call,
+    then enriches the result with severity classification and actionable recommendations.
+    """
+    supplier_data = payload.supplier.model_dump()
+    try:
+        disruption_result = predict(supplier_data, _pipeline)
+    except Exception as exc:
+        logger.exception("Risk report prediction failed: %s", exc)
+        raise HTTPException(status_code=500, detail="Prediction service error") from exc
+    scorecard = compute_scorecard(supplier_data)
+    report = build_risk_report(
+        supplier_id=payload.supplier_id,
+        supplier_name=payload.supplier_name,
+        disruption_result=disruption_result,
+        scorecard=scorecard,
+    )
+    log_prediction(
+        prediction_type="risk_report",
+        input_data=supplier_data,
+        prediction=disruption_result["disruption_risk"],
+        confidence=disruption_result.get("confidence"),
+        model_version=MODEL_VERSION,
+        latency_ms=None,
+        db=db,
+    )
+    return report
