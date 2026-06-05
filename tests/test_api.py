@@ -164,3 +164,53 @@ class TestDriftEndpoint:
     def test_monitoring_stats(self, client):
         resp = client.get("/api/v1/monitoring/stats")
         assert resp.status_code == 200
+
+
+class TestCorrelationIDMiddleware:
+    def test_response_has_correlation_id_header(self, client):
+        resp = client.get("/health")
+        assert "x-correlation-id" in resp.headers
+
+    def test_supplied_correlation_id_is_echoed(self, client):
+        cid = "test-corr-id-12345"
+        resp = client.get("/health", headers={"X-Correlation-ID": cid})
+        assert resp.headers.get("x-correlation-id") == cid
+
+    def test_generated_correlation_id_is_uuid_format(self, client):
+        import re
+        resp = client.get("/health")
+        cid = resp.headers.get("x-correlation-id", "")
+        uuid_pattern = r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        assert re.match(uuid_pattern, cid)
+
+
+class TestRateLimitMiddleware:
+    def test_readyz_endpoint(self, client):
+        resp = client.get("/readyz")
+        assert resp.status_code == 200
+        assert "ready" in resp.json()
+
+
+class TestSimilarSuppliersEndpoint:
+    def test_similar_suppliers_returns_200(self, client, supplier_payload):
+        payload = {"supplier": supplier_payload, "top_k": 3}
+        resp = client.post("/api/v1/suppliers/similar", json=payload)
+        assert resp.status_code == 200
+
+    def test_similar_suppliers_has_count(self, client, supplier_payload):
+        payload = {"supplier": supplier_payload, "top_k": 3}
+        resp = client.post("/api/v1/suppliers/similar", json=payload)
+        data = resp.json()
+        assert "count" in data
+        assert "similar_suppliers" in data
+
+    def test_demand_forecast_endpoint(self, client):
+        payload = {"history": [100.0, 110.0, 120.0, 130.0, 140.0, 150.0], "horizon": 3}
+        resp = client.post("/api/v1/demand/forecast", json=payload)
+        assert resp.status_code == 200
+        assert "forecast" in resp.json()
+
+    def test_demand_forecast_has_stats(self, client):
+        payload = {"history": [100.0] * 12, "horizon": 6}
+        resp = client.post("/api/v1/demand/forecast", json=payload)
+        assert "stats" in resp.json()
