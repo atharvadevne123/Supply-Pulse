@@ -153,7 +153,6 @@ class TestScoreCardEdgeCases:
             assert 0.0 <= card["total_score"] <= 1.0
 
     def test_scorecard_weights_sum_to_one(self):
-        card = compute_scorecard(GOOD_SUPPLIER)
         from app.supplier_scorer import SCORE_WEIGHTS
         assert abs(sum(SCORE_WEIGHTS.values()) - 1.0) < 0.001
 
