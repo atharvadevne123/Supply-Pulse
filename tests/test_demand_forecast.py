@@ -102,3 +102,32 @@ class TestComputeDemandStatistics:
     def test_decreasing_trend(self):
         stats = compute_demand_statistics(list(range(20, 0, -1)))
         assert stats["trend"] < 0
+
+    def test_statistics_keys_present(self):
+        stats = compute_demand_statistics([10.0, 20.0, 30.0])
+        for key in ("mean", "std", "min", "max", "cv", "trend"):
+            assert key in stats
+
+    @pytest.mark.parametrize("n_values", [1, 5, 10, 50])
+    def test_statistics_various_lengths(self, n_values):
+        values = [float(i + 1) for i in range(n_values)]
+        stats = compute_demand_statistics(values)
+        assert stats["min"] == 1.0
+        assert stats["max"] == float(n_values)
+
+    def test_forecast_horizon_length_matches_request(self):
+        history = [100.0 + i for i in range(24)]
+        result = forecast_demand(history, horizon=8, period=12)
+        assert len(result["forecast"]) == 8
+
+    def test_forecast_confidence_intervals_ordered(self):
+        history = [100.0] * 24
+        result = forecast_demand(history, horizon=4, period=12)
+        for lower, upper in zip(result.get("lower_95", []), result.get("upper_95", [])):
+            assert lower <= upper
+
+    @pytest.mark.parametrize("horizon", [1, 3, 6, 12])
+    def test_forecast_various_horizons(self, horizon):
+        history = [float(i) for i in range(24)]
+        result = forecast_demand(history, horizon=horizon, period=12)
+        assert len(result["forecast"]) == horizon
