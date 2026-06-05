@@ -58,12 +58,17 @@ app.add_middleware(
 )
 
 _request_counts: dict[str, int] = {}
+_MAX_TRACKED_IPS = 10_000
 RATE_LIMIT = 300
 
 
 @app.middleware("http")
-async def rate_limit_middleware(request: Request, call_next):
+async def rate_limit_middleware(request: Request, call_next) -> JSONResponse:
+    """Enforce per-IP request rate limit; evict oldest IPs when tracker is full."""
     client_ip = request.client.host if request.client else "unknown"
+    if len(_request_counts) >= _MAX_TRACKED_IPS:
+        oldest = next(iter(_request_counts))
+        del _request_counts[oldest]
     _request_counts[client_ip] = _request_counts.get(client_ip, 0) + 1
     if _request_counts[client_ip] > RATE_LIMIT:
         return JSONResponse(status_code=429, content={"detail": "Rate limit exceeded"})
