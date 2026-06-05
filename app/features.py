@@ -13,6 +13,17 @@ from sklearn.preprocessing import StandardScaler
 
 logger = logging.getLogger(__name__)
 
+__all__ = [
+    "NUMERIC_FEATURES",
+    "CATEGORICAL_FEATURES",
+    "ALL_FEATURES",
+    "GeopoliticalRiskEncoder",
+    "CategoryRiskEncoder",
+    "DropCategoricalTransformer",
+    "build_feature_pipeline",
+    "compute_demand_features",
+]
+
 NUMERIC_FEATURES = [
     "lead_time_days",
     "on_time_rate",
