@@ -57,3 +57,18 @@ class TestReorderPointExtended:
     def test_very_high_demand(self):
         result = compute_reorder_point(10000.0, 500.0, 30, 1.645)
         assert result["reorder_point"] > 100000
+
+    def test_zero_std_zero_safety_stock(self):
+        result = compute_reorder_point(100.0, 0.0, 14, 1.645)
+        assert result["safety_stock"] == 0.0
+        assert result["reorder_point"] == result["lead_demand"]
+
+    def test_single_day_lead_time(self):
+        result = compute_reorder_point(100.0, 10.0, 1, 1.645)
+        assert result["lead_demand"] == pytest.approx(100.0, rel=0.01)
+
+    @pytest.mark.parametrize("z_score", [1.28, 1.645, 2.326, 3.09])
+    def test_standard_z_scores(self, z_score):
+        result = compute_reorder_point(100.0, 20.0, 14, z_score)
+        assert result["safety_stock"] > 0
+        assert result["reorder_point"] > result["lead_demand"]
