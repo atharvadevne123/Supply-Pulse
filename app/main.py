@@ -34,7 +34,7 @@ APP_VERSION = __version__
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI) -> None:  # type: ignore[override]
     global _pipeline
     init_db()
     _pipeline = load_model()
@@ -76,7 +76,7 @@ async def rate_limit_middleware(request: Request, call_next) -> JSONResponse:
 
 
 @app.middleware("http")
-async def correlation_id_middleware(request: Request, call_next):
+async def correlation_id_middleware(request: Request, call_next) -> Any:
     correlation_id = request.headers.get("X-Correlation-ID", str(uuid.uuid4()))
     response = await call_next(request)
     response.headers["X-Correlation-ID"] = correlation_id
