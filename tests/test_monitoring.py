@@ -110,3 +110,37 @@ class TestComputePredictionStats:
         stats = compute_prediction_stats(db_session)
         assert "total_predictions" in stats
         assert stats["total_predictions"] == 0 or isinstance(stats["total_predictions"], int)
+
+    def test_stats_returns_dict(self, db_session):
+        stats = compute_prediction_stats(db_session)
+        assert isinstance(stats, dict)
+
+    def test_drift_ks_statistic_in_0_1_range(self):
+        rng = np.random.default_rng(55)
+        set_reference_distribution("ks_range_test", rng.uniform(0, 1, 200))
+        current = rng.uniform(0.2, 0.8, 200)
+        result = detect_drift("ks_range_test", current)
+        if result["ks_statistic"] is not None:
+            assert 0.0 <= result["ks_statistic"] <= 1.0
+
+    def test_drift_p_value_in_0_1_range(self):
+        rng = np.random.default_rng(66)
+        set_reference_distribution("pval_test", rng.uniform(0, 1, 200))
+        result = detect_drift("pval_test", rng.uniform(0, 1, 200))
+        if result["p_value"] is not None:
+            assert 0.0 <= result["p_value"] <= 1.0
+
+    def test_no_drift_when_same_distribution(self):
+        rng = np.random.default_rng(77)
+        ref = rng.normal(0.5, 0.1, 500)
+        set_reference_distribution("same_dist_test", ref)
+        current = rng.normal(0.5, 0.1, 500)
+        result = detect_drift("same_dist_test", current)
+        assert result["drift_detected"] is False
+
+    @pytest.mark.parametrize("n_features", [1, 3, 5])
+    def test_full_scan_result_count_matches_features(self, n_features):
+        rng = np.random.default_rng(88)
+        features = {f"f{i}": rng.uniform(0, 1, 50).tolist() for i in range(n_features)}
+        results = run_full_drift_scan(features)
+        assert len(results) == n_features
