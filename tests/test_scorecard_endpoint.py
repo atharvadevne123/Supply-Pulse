@@ -60,3 +60,28 @@ class TestScorecardEndpoint:
         payload["country"] = country
         resp = client.post("/api/v1/suppliers/scorecard", json=payload)
         assert resp.status_code == 200
+
+    def test_scorecard_has_weights(self, client, supplier_payload):
+        resp = client.post("/api/v1/suppliers/scorecard", json=supplier_payload)
+        data = resp.json()
+        assert "weights" in data
+        weights = data["weights"]
+        total = sum(weights.values())
+        assert abs(total - 1.0) < 0.001
+
+    def test_scorecard_sole_source_lowers_score(self, client, supplier_payload):
+        multi = dict(supplier_payload)
+        multi["is_sole_source"] = 0
+        sole = dict(supplier_payload)
+        sole["is_sole_source"] = 1
+
+        multi_resp = client.post("/api/v1/suppliers/scorecard", json=multi)
+        sole_resp = client.post("/api/v1/suppliers/scorecard", json=sole)
+        assert sole_resp.json()["total_score"] <= multi_resp.json()["total_score"]
+
+    @pytest.mark.parametrize("category", ["electronics", "logistics", "pharmaceutical"])
+    def test_scorecard_various_categories(self, client, supplier_payload, category):
+        payload = {**supplier_payload, "category": category}
+        resp = client.post("/api/v1/suppliers/scorecard", json=payload)
+        assert resp.status_code == 200
+        assert 0.0 <= resp.json()["total_score"] <= 1.0
