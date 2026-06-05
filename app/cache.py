@@ -10,6 +10,14 @@ from typing import Any, Callable
 logger = logging.getLogger(__name__)
 
 _cache: dict[str, tuple[Any, float]] = {}
+_MAX_CACHE_ENTRIES = 1_000
+
+
+def _evict_one_entry() -> None:
+    """Remove the oldest entry from the cache when capacity is exceeded."""
+    if _cache:
+        oldest_key = next(iter(_cache))
+        del _cache[oldest_key]
 
 
 def ttl_cache(ttl_seconds: int = 60) -> Callable:
@@ -33,6 +41,8 @@ def ttl_cache(ttl_seconds: int = 60) -> Callable:
                     logger.debug("Cache hit for '%s'", func.__name__)
                     return value
                 del _cache[cache_key]
+            if len(_cache) >= _MAX_CACHE_ENTRIES:
+                _evict_one_entry()
             result = func(*args, **kwargs)
             _cache[cache_key] = (result, now + ttl_seconds)
             logger.debug("Cache miss for '%s' - stored with TTL=%ds", func.__name__, ttl_seconds)
