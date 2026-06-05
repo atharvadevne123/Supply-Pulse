@@ -109,3 +109,29 @@ class TestInputBoundaryValidation:
         payload["lead_time_days"] = lead_time
         resp = client.post("/api/v1/predict/disruption", json=payload)
         assert resp.status_code == 200
+
+
+class TestResponseSchemas:
+    def test_predict_response_has_latency_ms(self, client, supplier_payload):
+        resp = client.post("/api/v1/predict/disruption", json=supplier_payload)
+        assert "latency_ms" in resp.json()
+
+    def test_predict_response_latency_positive(self, client, supplier_payload):
+        resp = client.post("/api/v1/predict/disruption", json=supplier_payload)
+        assert resp.json()["latency_ms"] >= 0.0
+
+    def test_reorder_response_has_all_fields(self, client, reorder_payload):
+        resp = client.post("/api/v1/inventory/reorder-point", json=reorder_payload)
+        data = resp.json()
+        for field in ("reorder_point", "safety_stock", "lead_demand", "service_level", "z_score"):
+            assert field in data, f"Missing field: {field}"
+
+    def test_drift_scan_response_drifted_features_is_list(self, client):
+        payload = {"features": {"lead_time_days": list(range(1, 51))}}
+        resp = client.post("/api/v1/monitoring/drift", json=payload)
+        assert isinstance(resp.json()["drifted_features"], list)
+
+    def test_forecast_response_has_trend_slope(self, client):
+        payload = {"history": [float(i) for i in range(1, 25)], "horizon": 3}
+        resp = client.post("/api/v1/demand/forecast", json=payload)
+        assert "trend_slope" in resp.json()
