@@ -18,6 +18,16 @@ from app.features import build_feature_pipeline
 
 logger = logging.getLogger(__name__)
 
+__all__ = [
+    "train",
+    "predict",
+    "load_model",
+    "save_model",
+    "compute_reorder_point",
+    "MODEL_PATH",
+    "MODEL_VERSION",
+]
+
 MODEL_PATH = Path(__file__).parent.parent / "model_artifacts" / "ensemble.pkl"
 MODEL_VERSION = "1.0.0"
 
