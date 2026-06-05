@@ -125,3 +125,60 @@ class TestDriftLogModel:
         session.flush()
         assert dl.id is not None
         assert dl.drift_detected is True
+
+    def test_drift_log_no_drift(self, session):
+        dl = DriftLog(
+            feature_name="on_time_rate",
+            ks_statistic=0.03,
+            p_value=0.45,
+            drift_detected=False,
+            sample_size=100,
+        )
+        session.add(dl)
+        session.flush()
+        assert dl.drift_detected is False
+
+
+class TestPredictionLogEdgeCases:
+    def test_prediction_log_null_confidence(self, session):
+        pl = PredictionLog(
+            prediction_type="disruption",
+            input_data={},
+            prediction=0.5,
+            confidence=None,
+            model_version="1.0.0",
+            latency_ms=None,
+        )
+        session.add(pl)
+        session.flush()
+        assert pl.confidence is None
+        assert pl.latency_ms is None
+
+    def test_multiple_prediction_logs(self, session):
+        for i in range(5):
+            pl = PredictionLog(
+                prediction_type="disruption",
+                input_data={"index": i},
+                prediction=float(i) / 10,
+                confidence=0.9,
+                model_version="1.0.0",
+                latency_ms=float(i + 1),
+            )
+            session.add(pl)
+        session.flush()
+        count = session.query(PredictionLog).count()
+        assert count >= 5
+
+    @pytest.mark.parametrize("pred_type", ["disruption", "risk_report", "scorecard"])
+    def test_prediction_log_various_types(self, session, pred_type):
+        pl = PredictionLog(
+            prediction_type=pred_type,
+            input_data={},
+            prediction=0.5,
+            confidence=None,
+            model_version="1.0.0",
+            latency_ms=None,
+        )
+        session.add(pl)
+        session.flush()
+        assert pl.prediction_type == pred_type
