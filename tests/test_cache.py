@@ -99,3 +99,46 @@ class TestEvictExpired:
         time.sleep(0.01)
         removed = evict_expired()
         assert removed >= 1
+
+    def test_evict_keeps_live_entries(self):
+        @ttl_cache(ttl_seconds=60)
+        def n(x: int) -> int:
+            return x
+
+        n(1)
+        n(2)
+        removed = evict_expired()
+        assert removed == 0
+        assert get_cache_stats()["live_entries"] >= 2
+
+
+class TestCacheKeyIsolation:
+    def test_kwargs_cached_separately(self):
+        calls = [0]
+
+        @ttl_cache(ttl_seconds=60)
+        def func(x: int, y: int = 0) -> int:
+            calls[0] += 1
+            return x + y
+
+        func(1, y=1)
+        func(1, y=2)
+        assert calls[0] == 2
+
+    def test_cache_returns_correct_value(self):
+        @ttl_cache(ttl_seconds=60)
+        def square(n: int) -> int:
+            return n * n
+
+        for i in range(1, 6):
+            assert square(i) == i * i
+
+    def test_cache_stats_keys_are_truncated(self):
+        @ttl_cache(ttl_seconds=60)
+        def longfunc(x: str) -> str:
+            return x
+
+        longfunc("a" * 200)
+        stats = get_cache_stats()
+        for key in stats["keys"]:
+            assert len(key) <= 80
