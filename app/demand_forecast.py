@@ -80,6 +80,8 @@ def forecast_demand(
         "forecast": [round(f, 2) for f in forecasts],
         "lower_bound": [round(lb, 2) for lb in lower],
         "upper_bound": [round(u, 2) for u in upper],
+        "lower_95": [round(lb, 2) for lb in lower],
+        "upper_95": [round(u, 2) for u in upper],
         "trend_slope": round(slope, 4),
         "std_residual": round(std_residual, 4),
         "horizon": horizon,
