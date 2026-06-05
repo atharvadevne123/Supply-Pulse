@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Generator
 
 from sqlalchemy import (
@@ -13,6 +13,7 @@ from sqlalchemy import (
     Column,
     DateTime,
     Float,
+    Index,
     Integer,
     String,
     Text,
@@ -24,10 +25,12 @@ logger = logging.getLogger(__name__)
 
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./supply_pulse.db")
 
+_is_sqlite = DATABASE_URL.startswith("sqlite")
 engine = create_engine(
     DATABASE_URL,
-    connect_args={"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {},
+    connect_args={"check_same_thread": False} if _is_sqlite else {},
     pool_pre_ping=True,
+    **({} if _is_sqlite else {"pool_size": 10, "max_overflow": 20, "pool_timeout": 30}),
 )
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
@@ -53,7 +56,7 @@ class Supplier(Base):
     capacity_utilization = Column(Float, nullable=False)
     years_active = Column(Integer, nullable=False)
     is_sole_source = Column(Boolean, default=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
 
 class Product(Base):
@@ -70,7 +73,7 @@ class Product(Base):
     reorder_cost = Column(Float, nullable=False)
     safety_stock = Column(Integer, nullable=False)
     lead_time_days = Column(Integer, nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
 
 class DemandRecord(Base):
@@ -84,7 +87,7 @@ class DemandRecord(Base):
     quantity = Column(Integer, nullable=False)
     price = Column(Float, nullable=True)
     promotion = Column(Boolean, default=False)
-    recorded_at = Column(DateTime, default=datetime.utcnow)
+    recorded_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
 
 class PredictionLog(Base):
@@ -93,13 +96,15 @@ class PredictionLog(Base):
     __tablename__ = "prediction_logs"
 
     id = Column(Integer, primary_key=True, index=True)
-    prediction_type = Column(String(50), nullable=False)
+    prediction_type = Column(String(50), nullable=False, index=True)
     input_data = Column(JSON, nullable=False)
     prediction = Column(Float, nullable=False)
     confidence = Column(Float, nullable=True)
-    model_version = Column(String(50), nullable=False)
+    model_version = Column(String(50), nullable=False, index=True)
     latency_ms = Column(Float, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), index=True)
+
+    __table_args__ = (Index("ix_prediction_logs_type_created", "prediction_type", "created_at"),)
 
 
 class DriftLog(Base):
@@ -114,7 +119,7 @@ class DriftLog(Base):
     drift_detected = Column(Boolean, nullable=False)
     sample_size = Column(Integer, nullable=False)
     notes = Column(Text, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
 
 def get_db() -> Generator[Session, None, None]:
