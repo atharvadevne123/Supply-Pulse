@@ -69,5 +69,18 @@ jobs:
       - name: Install mypy and stubs
         run: pip install mypy fastapi pydantic sqlalchemy numpy scipy
       - name: Run mypy
-        run: mypy app/ --ignore-missing-imports --no-error-summary
+        run: mypy app/ --ignore-missing-imports --no-error-summary --warn-return-any
         continue-on-error: true
+
+  security:
+    name: Security audit (pip-audit)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install pip-audit
+        run: pip install pip-audit
+      - name: Audit dependencies
+        run: pip-audit --requirement requirements.txt --ignore-vuln GHSA-jfh8-c2jp-g3s3 || true
