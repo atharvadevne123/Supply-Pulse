@@ -83,3 +83,36 @@ class TestGetAllMetrics:
         metrics = get_all_metrics()
         assert "latency_histograms" in metrics
         assert "req_latency" in metrics["latency_histograms"]
+
+
+class TestMetricsEdgeCases:
+    def test_increment_multiple_counters_independent(self):
+        increment("counter_a", 3)
+        increment("counter_b", 7)
+        assert get_counter("counter_a") == 3
+        assert get_counter("counter_b") == 7
+
+    def test_histogram_trims_at_10000(self):
+        for i in range(10_005):
+            record_latency("big_hist", float(i))
+        stats = get_histogram_stats("big_hist")
+        assert stats["count"] <= 10_000
+
+    def test_histogram_mean_is_reasonable(self):
+        for v in [10.0, 20.0, 30.0]:
+            record_latency("mean_test", v)
+        stats = get_histogram_stats("mean_test")
+        assert stats["mean"] == pytest.approx(20.0, rel=0.01)
+
+    @pytest.mark.parametrize("value", [0.0, 0.001, 1000.0, 99999.9])
+    def test_record_extreme_latencies(self, value):
+        record_latency("extreme", value)
+        stats = get_histogram_stats("extreme")
+        assert stats["count"] >= 1
+
+    def test_reset_clears_counters_and_histograms(self):
+        increment("to_reset", 5)
+        record_latency("to_reset_hist", 10.0)
+        reset_metrics()
+        assert get_counter("to_reset") == 0
+        assert get_histogram_stats("to_reset_hist")["count"] == 0
