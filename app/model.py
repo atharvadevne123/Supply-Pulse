@@ -84,16 +84,12 @@ def build_model() -> VotingClassifier:
     return VotingClassifier(estimators=_build_estimators(), voting="soft", n_jobs=-1)
 
 
-def train(
-    X: pd.DataFrame,
+def _run_cross_validation(
+    X_transformed: np.ndarray,
     y: pd.Series,
-    cv_folds: int = 5,
-) -> tuple[Pipeline, dict[str, float]]:
-    """Train feature pipeline + ensemble; return fitted pipeline and CV metrics."""
-    feature_pipe = build_feature_pipeline()
-    X_transformed = feature_pipe.fit_transform(X)
-
-    model = build_model()
+    cv_folds: int,
+) -> list[float]:
+    """Run stratified k-fold CV and return per-fold AUC scores."""
     skf = StratifiedKFold(n_splits=cv_folds, shuffle=True, random_state=42)
     aucs: list[float] = []
     for fold, (train_idx, val_idx) in enumerate(skf.split(X_transformed, y)):
@@ -105,18 +101,41 @@ def train(
         fold_auc = roc_auc_score(y_val, proba)
         aucs.append(fold_auc)
         logger.info("Fold %d AUC: %.4f", fold + 1, fold_auc)
+    return aucs
 
-    model.fit(X_transformed, y)
 
-    full_pipeline = Pipeline([("features", feature_pipe), ("model", model)])
-    metrics = {
+def _build_training_metrics(
+    aucs: list[float],
+    cv_folds: int,
+    y: pd.Series,
+    n_features: int,
+) -> dict[str, float]:
+    """Assemble training metric summary from CV results."""
+    return {
         "cv_auc_mean": float(np.mean(aucs)),
         "cv_auc_std": float(np.std(aucs)),
         "cv_folds": cv_folds,
         "n_samples": len(y),
-        "n_features": X_transformed.shape[1],
+        "n_features": n_features,
         "disruption_rate": float(y.mean()),
     }
+
+
+def train(
+    X: pd.DataFrame,
+    y: pd.Series,
+    cv_folds: int = 5,
+) -> tuple[Pipeline, dict[str, float]]:
+    """Train feature pipeline + ensemble; return fitted pipeline and CV metrics."""
+    feature_pipe = build_feature_pipeline()
+    X_transformed = feature_pipe.fit_transform(X)
+
+    aucs = _run_cross_validation(X_transformed, y, cv_folds)
+
+    model = build_model()
+    model.fit(X_transformed, y)
+    full_pipeline = Pipeline([("features", feature_pipe), ("model", model)])
+    metrics = _build_training_metrics(aucs, cv_folds, y, X_transformed.shape[1])
     logger.info(
         "Training complete. CV AUC: %.4f ± %.4f", metrics["cv_auc_mean"], metrics["cv_auc_std"]
     )
