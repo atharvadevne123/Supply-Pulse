@@ -196,3 +196,48 @@ class TestReorderPoint:
         assert result["reorder_point"] > 0
         assert result["safety_stock"] > 0
         assert result["lead_demand"] > 0
+
+    def test_reorder_point_equals_lead_demand_plus_safety_stock(self):
+        result = compute_reorder_point(100.0, 15.0, 10, 1.645)
+        expected = result["lead_demand"] + result["safety_stock"]
+        assert abs(result["reorder_point"] - expected) < 0.01
+
+    @pytest.mark.parametrize("lead_days", [1, 7, 30, 90, 180])
+    def test_reorder_point_scales_with_lead_time(self, lead_days):
+        result = compute_reorder_point(50.0, 10.0, lead_days, 1.645)
+        assert result["lead_demand"] == pytest.approx(50.0 * lead_days, rel=0.01)
+
+    def test_predict_confidence_in_range(self, trained_pipeline):
+        sample = {
+            "lead_time_days": 30,
+            "on_time_rate": 0.9,
+            "defect_rate": 0.02,
+            "financial_score": 0.8,
+            "geopolitical_risk": 0.3,
+            "capacity_utilization": 0.6,
+            "years_active": 5,
+            "is_sole_source": 0,
+            "country": "US",
+            "category": "electronics",
+        }
+        result = predict(sample, trained_pipeline)
+        conf = result.get("confidence")
+        if conf is not None:
+            assert 0.0 <= conf <= 1.0
+
+    @pytest.mark.parametrize("category", ["electronics", "textile", "logistics", "pharmaceutical"])
+    def test_predict_category_variants(self, trained_pipeline, category):
+        sample = {
+            "lead_time_days": 30,
+            "on_time_rate": 0.85,
+            "defect_rate": 0.03,
+            "financial_score": 0.75,
+            "geopolitical_risk": 0.35,
+            "capacity_utilization": 0.65,
+            "years_active": 8,
+            "is_sole_source": 0,
+            "country": "US",
+            "category": category,
+        }
+        result = predict(sample, trained_pipeline)
+        assert result["disruption_label"] in ("LOW", "MEDIUM", "HIGH")
