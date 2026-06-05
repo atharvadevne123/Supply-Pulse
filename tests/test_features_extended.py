@@ -120,3 +120,29 @@ class TestComputeDemandFeaturesEdgeCases:
     def test_extreme_values(self, values):
         result = compute_demand_features(values)
         assert result["mean"] >= 0
+
+
+class TestGeopoliticalRiskCountries:
+    @pytest.mark.parametrize("country,expected", [
+        ("CN", 0.9),
+        ("RU", 0.9),
+        ("IR", 0.9),
+        ("IN", 0.5),
+        ("MX", 0.5),
+        ("US", 0.2),
+        ("DE", 0.2),
+        ("UNKNOWN", 0.2),
+    ])
+    def test_country_risk_scores(self, country, expected):
+        df = pd.DataFrame({"country": [country]})
+        enc = GeopoliticalRiskEncoder()
+        out = enc.fit_transform(df)
+        assert out["country_risk_score"].iloc[0] == expected
+
+    def test_high_risk_countries_above_low_risk(self):
+        enc = GeopoliticalRiskEncoder()
+        df_high = pd.DataFrame({"country": ["CN"]})
+        df_low = pd.DataFrame({"country": ["US"]})
+        high = enc.fit_transform(df_high)["country_risk_score"].iloc[0]
+        low = enc.fit_transform(df_low)["country_risk_score"].iloc[0]
+        assert high > low
