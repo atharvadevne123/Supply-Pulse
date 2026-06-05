@@ -202,3 +202,40 @@ class TestComputeDemandFeatures:
     def test_max_demand(self, demands, expected_max):
         result = compute_demand_features(demands)
         assert result["max"] == float(expected_max)
+
+
+class TestFeaturePipelineEdgeCases:
+    def test_pipeline_output_column_count_matches_all_features(self):
+        from app.features import ALL_FEATURES
+        pipe = build_feature_pipeline()
+        df = _base_df(5)
+        out = pipe.fit_transform(df)
+        assert out.shape[1] == len(ALL_FEATURES)
+
+    @pytest.mark.parametrize("n_rows", [1, 5, 50])
+    def test_pipeline_output_row_count_preserved(self, n_rows):
+        pipe = build_feature_pipeline()
+        df = _base_df(n_rows)
+        out = pipe.fit_transform(df)
+        assert out.shape[0] == n_rows
+
+    def test_build_raw_dataframe_includes_default_country(self):
+        df = build_raw_dataframe({"lead_time_days": 30, "on_time_rate": 0.9})
+        assert "country" in df.columns
+
+    def test_demand_features_decreasing_trend(self):
+        result = compute_demand_features(list(range(20, 0, -1)))
+        assert result["trend"] < 0
+
+    def test_demand_features_min_equals_smallest_value(self):
+        values = [3.0, 1.0, 4.0, 1.5, 9.0]
+        result = compute_demand_features(values)
+        assert result["min"] == pytest.approx(1.0)
+
+    def test_pipeline_transform_consistent_with_fit_transform(self):
+        import numpy as np_check
+        pipe = build_feature_pipeline()
+        df = _base_df(20)
+        out1 = pipe.fit_transform(df)
+        out2 = pipe.transform(df)
+        assert np_check.allclose(out1, out2)
