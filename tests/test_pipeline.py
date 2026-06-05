@@ -129,3 +129,24 @@ class TestCVMetrics:
         assert "cv_auc_std" in metrics
         assert "n_samples" in metrics
         assert "n_features" in metrics
+
+    def test_cv_auc_std_non_negative(self):
+        df, y = _make_df(n=150, seed=9)
+        _, metrics = train(df, y, cv_folds=3)
+        assert metrics["cv_auc_std"] >= 0.0
+
+    def test_n_samples_matches_dataframe(self):
+        df, y = _make_df(n=80, seed=11)
+        _, metrics = train(df, y, cv_folds=2)
+        assert metrics["n_samples"] == 80
+
+    def test_disruption_rate_in_range(self):
+        df, y = _make_df(n=100, seed=13)
+        _, metrics = train(df, y, cv_folds=2)
+        assert 0.0 <= metrics["disruption_rate"] <= 1.0
+
+    @pytest.mark.parametrize("cv_folds", [2, 3])
+    def test_cv_folds_recorded_in_metrics(self, cv_folds):
+        df, y = _make_df(n=120, seed=15)
+        _, metrics = train(df, y, cv_folds=cv_folds)
+        assert metrics["cv_folds"] == cv_folds
