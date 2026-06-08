@@ -49,7 +49,9 @@ class TestRiskReportEndpoint:
         resp = client.post("/api/v1/suppliers/risk-report", json=risk_report_payload)
         assert "generated_at" in resp.json()
 
-    def test_risk_report_high_risk_supplier_has_recommendations(self, client, high_risk_supplier_payload):
+    def test_risk_report_high_risk_supplier_has_recommendations(
+        self, client, high_risk_supplier_payload
+    ):
         payload = {
             "supplier_id": "SUPP-HIGH",
             "supplier_name": "High Risk Corp",
@@ -64,11 +66,14 @@ class TestRiskReportEndpoint:
         resp = client.post("/api/v1/suppliers/risk-report", json=payload)
         assert resp.status_code == 422
 
-    @pytest.mark.parametrize("country,category", [
-        ("US", "electronics"),
-        ("CN", "semiconductor"),
-        ("IN", "textile"),
-    ])
+    @pytest.mark.parametrize(
+        "country,category",
+        [
+            ("US", "electronics"),
+            ("CN", "semiconductor"),
+            ("IN", "textile"),
+        ],
+    )
     def test_risk_report_various_suppliers(self, client, supplier_payload, country, category):
         payload = {
             "supplier_id": f"SUPP-{country}",

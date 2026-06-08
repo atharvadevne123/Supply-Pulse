@@ -122,9 +122,16 @@ class TestValidatorEdgeCases:
         errors = validate_demand_history([0.0, 0.0, 0.0])
         assert errors == []
 
-    @pytest.mark.parametrize("rate_field", [
-        "on_time_rate", "defect_rate", "financial_score", "geopolitical_risk", "capacity_utilization"
-    ])
+    @pytest.mark.parametrize(
+        "rate_field",
+        [
+            "on_time_rate",
+            "defect_rate",
+            "financial_score",
+            "geopolitical_risk",
+            "capacity_utilization",
+        ],
+    )
     def test_boundary_values_exactly_zero_and_one(self, rate_field):
         for boundary in (0.0, 1.0):
             errors = validate_supplier_input({rate_field: boundary})

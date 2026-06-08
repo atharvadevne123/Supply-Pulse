@@ -178,6 +178,7 @@ class TestCorrelationIDMiddleware:
 
     def test_generated_correlation_id_is_uuid_format(self, client):
         import re
+
         resp = client.get("/health")
         cid = resp.headers.get("x-correlation-id", "")
         uuid_pattern = r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"

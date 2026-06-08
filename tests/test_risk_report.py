@@ -112,6 +112,7 @@ class TestBuildRiskReport:
 
     def test_report_generated_at_is_iso_format(self):
         import datetime
+
         report = build_risk_report("S-005", "Corp", MOCK_DISRUPTION_LOW, MOCK_SCORECARD_GOOD)
         dt = datetime.datetime.fromisoformat(report["generated_at"])
         assert dt is not None
@@ -124,12 +125,15 @@ class TestBuildRiskReport:
         report = build_risk_report("S-007", "Corp", MOCK_DISRUPTION_HIGH, MOCK_SCORECARD_BAD)
         assert report["components"] == MOCK_SCORECARD_BAD["components"]
 
-    @pytest.mark.parametrize("risk_score,expected_severity", [
-        (0.81, "CRITICAL"),
-        (0.61, "HIGH"),
-        (0.41, "MEDIUM"),
-        (0.10, "LOW"),
-    ])
+    @pytest.mark.parametrize(
+        "risk_score,expected_severity",
+        [
+            (0.81, "CRITICAL"),
+            (0.61, "HIGH"),
+            (0.41, "MEDIUM"),
+            (0.10, "LOW"),
+        ],
+    )
     def test_severity_thresholds(self, risk_score, expected_severity):
         disruption = {"disruption_risk": risk_score, "disruption_label": "TEST"}
         report = build_risk_report("S-P", "Corp", disruption, MOCK_SCORECARD_GOOD)

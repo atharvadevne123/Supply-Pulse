@@ -148,11 +148,13 @@ class TestFallbackSimilarity:
 class TestGetIndexSize:
     def test_get_index_size_returns_int(self):
         from app.faiss_store import get_index_size
+
         size = get_index_size()
         assert isinstance(size, int)
 
     def test_get_index_size_after_build_matches_supplier_count(self):
         from app.faiss_store import build_index, get_index_size
+
         build_index(SAMPLE_SUPPLIERS)
         assert get_index_size() == len(SAMPLE_SUPPLIERS)
 

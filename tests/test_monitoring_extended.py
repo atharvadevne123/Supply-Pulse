@@ -92,6 +92,7 @@ class TestLogPredictionEdgeCases:
     def test_log_prediction_null_confidence(self, db_session):
         log_prediction("disruption", {}, 0.7, None, "1.0.0", None, db=db_session)
         from app.database import PredictionLog
+
         entry = db_session.query(PredictionLog).filter_by(prediction=0.7).first()
         assert entry is not None
         assert entry.confidence is None
@@ -99,6 +100,7 @@ class TestLogPredictionEdgeCases:
     def test_log_prediction_zero_latency(self, db_session):
         log_prediction("disruption", {}, 0.3, 0.8, "1.0.0", 0.0, db=db_session)
         from app.database import PredictionLog
+
         entry = db_session.query(PredictionLog).filter_by(latency_ms=0.0).first()
         assert entry is not None
 
@@ -106,7 +108,6 @@ class TestLogPredictionEdgeCases:
     def test_log_various_prediction_types(self, db_session, prediction_type):
         log_prediction(prediction_type, {"x": 1}, 0.5, 0.9, "1.0.0", 10.0, db=db_session)
         from app.database import PredictionLog
-        entry = db_session.query(PredictionLog).filter_by(
-            prediction_type=prediction_type
-        ).first()
+
+        entry = db_session.query(PredictionLog).filter_by(prediction_type=prediction_type).first()
         assert entry is not None

@@ -123,16 +123,19 @@ class TestComputeDemandFeaturesEdgeCases:
 
 
 class TestGeopoliticalRiskCountries:
-    @pytest.mark.parametrize("country,expected", [
-        ("CN", 0.9),
-        ("RU", 0.9),
-        ("IR", 0.9),
-        ("IN", 0.5),
-        ("MX", 0.5),
-        ("US", 0.2),
-        ("DE", 0.2),
-        ("UNKNOWN", 0.2),
-    ])
+    @pytest.mark.parametrize(
+        "country,expected",
+        [
+            ("CN", 0.9),
+            ("RU", 0.9),
+            ("IR", 0.9),
+            ("IN", 0.5),
+            ("MX", 0.5),
+            ("US", 0.2),
+            ("DE", 0.2),
+            ("UNKNOWN", 0.2),
+        ],
+    )
     def test_country_risk_scores(self, country, expected):
         df = pd.DataFrame({"country": [country]})
         enc = GeopoliticalRiskEncoder()

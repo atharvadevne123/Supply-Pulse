@@ -207,6 +207,7 @@ class TestComputeDemandFeatures:
 class TestFeaturePipelineEdgeCases:
     def test_pipeline_output_column_count_matches_all_features(self):
         from app.features import ALL_FEATURES
+
         pipe = build_feature_pipeline()
         df = _base_df(5)
         out = pipe.fit_transform(df)
@@ -234,6 +235,7 @@ class TestFeaturePipelineEdgeCases:
 
     def test_pipeline_transform_consistent_with_fit_transform(self):
         import numpy as np_check
+
         pipe = build_feature_pipeline()
         df = _base_df(20)
         out1 = pipe.fit_transform(df)

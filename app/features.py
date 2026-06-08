@@ -204,4 +204,11 @@ def compute_demand_features(demands: list[float]) -> dict[str, float]:
     std = float(arr.std()) if len(arr) > 1 else 0.0
     cv = std / mean if mean > 0 else 0.0
     trend = float(np.polyfit(np.arange(len(arr)), arr, 1)[0]) if len(arr) > 1 else 0.0
-    return {"mean": mean, "std": std, "cv": cv, "trend": trend, "min": float(arr.min()), "max": float(arr.max())}
+    return {
+        "mean": mean,
+        "std": std,
+        "cv": cv,
+        "trend": trend,
+        "min": float(arr.min()),
+        "max": float(arr.max()),
+    }
