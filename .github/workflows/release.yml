@@ -21,7 +21,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install build tools
-        run: pip install --upgrade pip "build>=1.2" "setuptools>=68,<70" wheel
+        run: pip install --upgrade pip "build>=1.2" "setuptools>=68" wheel
 
       - name: Build wheel
         run: python -m build --sdist --wheel
