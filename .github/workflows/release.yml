@@ -31,7 +31,9 @@ jobs:
       - name: Upload release assets
         uses: ncipollo/release-action@v1
         with:
+          tag: ${{ github.ref_name }}
           artifacts: "dist/*"
           allowUpdates: true
           omitBodyDuringUpdate: true
+          makeLatest: true
           token: ${{ secrets.GITHUB_TOKEN }}
