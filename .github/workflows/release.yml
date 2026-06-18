@@ -29,11 +29,8 @@ jobs:
           PYTHONWARNINGS: ignore
 
       - name: Upload release assets
-        uses: ncipollo/release-action@v1
+        uses: softprops/action-gh-release@v2
         with:
-          tag: ${{ github.ref_name }}
-          artifacts: "dist/*"
-          allowUpdates: true
-          omitBodyDuringUpdate: true
-          makeLatest: true
+          files: dist/*
+          make_latest: true
           token: ${{ secrets.GITHUB_TOKEN }}
