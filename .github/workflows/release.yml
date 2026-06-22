@@ -30,6 +30,7 @@ jobs:
           PYTHONWARNINGS: ignore
 
       - name: Upload release assets
+        if: github.ref_type == 'tag'
         uses: softprops/action-gh-release@v2
         with:
           files: dist/*
